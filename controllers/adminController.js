@@ -296,11 +296,11 @@ const RejectWithdrawal = async (req, res) => {
   try {
     const { id } = req.body
     const withdrawal = await Withdrawal.findByPk(id)
-    const newWithd = await withdrawal.update({ status: "rejected" })
+    await withdrawal.update({ status: "rejected" })
 
     const user = await User.findByPk(withdrawal.user_id)
     const refund = parseFloat(user.withdrawals) + parseFloat(withdrawal.amount)
-    console.log(refund);
+
     await user.update({ withdrawals: refund })
 
     return res.send({ success: true, message:" successfully refund to the user " })
@@ -317,8 +317,7 @@ module.exports = {
   updateAdminSettings,
   RejectWithdrawal,
   ApproveWithdrawal,
-  ApproveWithdrawal,
   RejectWithdrawal,
   deleteAdminSettings,
   createAdminSettings
-}; 
+};

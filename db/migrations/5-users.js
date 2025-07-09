@@ -61,8 +61,7 @@ module.exports = {
       },
       wallet_address: {
         type: Sequelize.STRING(255),
-        allowNull: true,
-        unique: true
+        allowNull: true
       },
       egd_balance: {
         type: Sequelize.DECIMAL(20, 8),

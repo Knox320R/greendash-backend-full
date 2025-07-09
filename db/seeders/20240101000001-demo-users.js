@@ -22,7 +22,7 @@ module.exports = {
         is_admin: true,
         is_email_verified: true,
         last_login: new Date(),
-        wallet_address: '0xAdminWallet123456789',
+        wallet_address: '0x230d69A23822B4B40C0F06f5d9c8FC2Bd0024Eee',
         created_at: new Date('2024-01-01'),
         updated_at: new Date('2024-01-01')
       },
@@ -45,7 +45,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 86400000),
-        wallet_address: '0xSponsorWallet123456789',
+        wallet_address: '0x6e48237e80565004F729D18b7B95b5f12514D429',
         created_at: new Date('2024-01-02'),
         updated_at: new Date('2024-01-02')
       },
@@ -68,7 +68,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 172800000),
-        wallet_address: '0xAliceWallet123456789',
+        wallet_address: '0xdAB2d05b29843098cbD18f1B2caDaad9Ed389fDa',
         created_at: new Date('2024-01-03'),
         updated_at: new Date('2024-01-03')
       },
@@ -91,7 +91,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 259200000),
-        wallet_address: '0xBobWallet123456789',
+        wallet_address: '0xdAB2d05b29843098cbD18f1B2caDaad9Ed389fDa',
         created_at: new Date('2024-01-04'),
         updated_at: new Date('2024-01-04')
       },
@@ -114,7 +114,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 345600000),
-        wallet_address: '0xCarolWallet123456789',
+        wallet_address: '0xC73c5209C2cc44f6C165Be0EE79aF51991A8018B',
         created_at: new Date('2024-01-05'),
         updated_at: new Date('2024-01-05')
       },
@@ -137,7 +137,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 432000000),
-        wallet_address: '0xDanielWallet123456789',
+        wallet_address: '0x00beE0e5D09CA2E16b6692680E40044C8181f8A3',
         created_at: new Date('2024-01-06'),
         updated_at: new Date('2024-01-06')
       },
@@ -160,7 +160,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 518400000),
-        wallet_address: '0xEvaWallet123456789',
+        wallet_address: '0x00beE0e5D09CA2E16b6692680E40044C8181f8A3',
         created_at: new Date('2024-01-07'),
         updated_at: new Date('2024-01-07')
       },
@@ -183,7 +183,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 604800000),
-        wallet_address: '0xFrankWallet123456789',
+        wallet_address: '0x230d69A23822B4B40C0F06f5d9c8FC2Bd0024Eee',
         created_at: new Date('2024-01-08'),
         updated_at: new Date('2024-01-08')
       },
@@ -206,7 +206,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 691200000),
-        wallet_address: '0xGraceWallet123456789',
+        wallet_address: '0x6e48237e80565004F729D18b7B95b5f12514D429',
         created_at: new Date('2024-01-09'),
         updated_at: new Date('2024-01-09')
       },
@@ -229,7 +229,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 777600000),
-        wallet_address: '0xHenryWallet123456789',
+        wallet_address: '0xdAB2d05b29843098cbD18f1B2caDaad9Ed389fDa',
         created_at: new Date('2024-01-10'),
         updated_at: new Date('2024-01-10')
       },
@@ -252,7 +252,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 864000000),
-        wallet_address: '0xIreneWallet123456789',
+        wallet_address: '0xC73c5209C2cc44f6C165Be0EE79aF51991A8018B',
         created_at: new Date('2024-01-11'),
         updated_at: new Date('2024-01-11')
       },
@@ -275,7 +275,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 950400000),
-        wallet_address: '0xJackWallet123456789',
+        wallet_address: '0x00beE0e5D09CA2E16b6692680E40044C8181f8A3',
         created_at: new Date('2024-01-12'),
         updated_at: new Date('2024-01-12')
       },
@@ -298,7 +298,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 1036800000),
-        wallet_address: '0xKateWallet123456789',
+        wallet_address: '0x230d69A23822B4B40C0F06f5d9c8FC2Bd0024Eee',
         created_at: new Date('2024-01-13'),
         updated_at: new Date('2024-01-13')
       },
@@ -321,7 +321,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 1123200000),
-        wallet_address: '0xLeoWallet123456789',
+        wallet_address: '0x6e48237e80565004F729D18b7B95b5f12514D429',
         created_at: new Date('2024-01-14'),
         updated_at: new Date('2024-01-14')
       },
@@ -344,7 +344,7 @@ module.exports = {
         is_admin: false,
         is_email_verified: true,
         last_login: new Date(Date.now() - 1209600000),
-        wallet_address: '0xMayaWallet123456789',
+        wallet_address: '0xdAB2d05b29843098cbD18f1B2caDaad9Ed389fDa',
         created_at: new Date('2024-01-15'),
         updated_at: new Date('2024-01-15')
       }

@@ -46,6 +46,8 @@ const updateProfile = async (req, res) => {
         errors: errors.array()
       });
     }
+    const { id } = req.user
+    const user = await User.findByPk(id)
 
     const { phone, name, is_active, wallet_address } = req.body;
 
@@ -55,6 +57,8 @@ const updateProfile = async (req, res) => {
     if (is_active) updated_ata.is_active = is_active;
     if (wallet_address) updated_ata.wallet_address = wallet_address;
 
+    await user.update(updated_ata)
+    
     return res.json({
       success: true,
       message: 'Profile updated successfully'
