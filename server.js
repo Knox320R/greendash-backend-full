@@ -3,6 +3,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { startListening } = require("./chainListener");
+const startDailyBonusScheduler = require('./daily_bonus');
 
 const { sequelize } = require('./config/database');
 const routes = require('./routes');
@@ -12,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 
 // Security middleware
 // Rate limiting
+
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW || 15) * 60 * 1000, // 15 minutes default
   max: parseInt(process.env.RATE_LIMIT_MAX || 100), // 100 requests per windowMs default
@@ -23,8 +25,9 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use(limiter);
 
+
+app.use(limiter);
 // CORS configuration
 // app.use(cors());
 app.use(cors({
@@ -72,6 +75,8 @@ async function startServer() {
       }
     }
     
+    // Start the daily bonus scheduler
+    await startDailyBonusScheduler();
     app.listen(PORT, () => {
       console.log(`🚀 GreenDash Backend server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);

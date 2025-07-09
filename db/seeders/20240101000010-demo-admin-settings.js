@@ -13,7 +13,7 @@ module.exports = {
       { title: 'max_withdrawal', description: 'Maximum withdrawal amount', value: '1000', created_at: new Date(Date.now() - 4000000), updated_at: new Date(Date.now() - 4000000) },
       { title: 'unilevel_commission_enable', description: 'Unilevel commission enabled', value: 'true', created_at: new Date(Date.now() - 7000000), updated_at: new Date(Date.now() - 7000000) },
       { title: 'rank_reward_enable', description: 'Pay in USDT or electric vehicle equivalent', value: 'true', created_at: new Date(Date.now() - 5000000), updated_at: new Date(Date.now() - 5000000) },
-      { title: 'daily_bonus_time', description: 'When this platform calculates all daily bonus for stakers.', value: '12:00:00 PM', created_at: new Date(Date.now() - 10000000), updated_at: new Date(Date.now() - 10000000) },
+      { title: 'daily_bonus_time', description: 'When this platform calculates all daily bonus for stakers.', value: '10:00', created_at: new Date(Date.now() - 10000000), updated_at: new Date(Date.now() - 10000000) },
       { title: 'platform_name', description: 'Platform display name', value: 'GreenDash', created_at: new Date(Date.now() - 10000000), updated_at: new Date(Date.now() - 10000000) }
     ]);
   },

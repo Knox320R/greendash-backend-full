@@ -1,3 +1,4 @@
+const { where } = require('sequelize');
 const { Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
 
@@ -58,7 +59,7 @@ const updateProfile = async (req, res) => {
     if (wallet_address) updated_ata.wallet_address = wallet_address;
 
     await user.update(updated_ata)
-    
+
     return res.json({
       success: true,
       message: 'Profile updated successfully'
@@ -191,15 +192,15 @@ const convertToUSDT = async (req, res) => {
     const user = await User.findByPk(user_id)
     const egd_balance = Number(user.egd_balance)
     const withdrawals = parseFloat(user.withdrawals)
-    if(amount > egd_balance) return res.status(403).send({ message: "Your requested amount is exceeding", success: true })
+    if (amount > egd_balance) return res.status(403).send({ message: "Your requested amount is exceeding", success: true })
 
     const token_price_setting = await AdminSetting.findOne({ where: { title: "token_price" } })
     const token_price = parseFloat(token_price_setting.value)
-    
+
     const new_egd = egd_balance - amount
     const new_withd = withdrawals + amount * token_price
     const newUser = await user.update({ egd_balance: new_egd, withdrawals: new_withd })
-    res.send({ success: true, message: "success to exchange your token, EGD -> USDT",  egd: newUser.egd_balance, withd: newUser.withdrawals })
+    res.send({ success: true, message: "success to exchange your token, EGD -> USDT", egd: newUser.egd_balance, withd: newUser.withdrawals })
 
   } catch (e) {
     console.log(e);
@@ -214,10 +215,10 @@ const withdrawalRequest = async (req, res) => {
     console.log(user_id, amount);
     const user = await User.findByPk(user_id)
     const withdrawals = parseFloat(user.withdrawals)
-    if(amount > withdrawals) req.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount."})
-    
+    if (amount > withdrawals) req.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount." })
+
     const newUser = await user.update({ withdrawals: withdrawals - amount })
-  
+
     const withdrawal = await Withdrawal.create({ user_id, amount, status: "pending" })
 
     res.send({ success: true, message: "Your request is pending for admin check. please wait till admin admit it.", newUser, withdrawal })
@@ -228,11 +229,32 @@ const withdrawalRequest = async (req, res) => {
   }
 }
 
+const confirmUpdatedWithdrawl = async (req, res) => {
+  try {
+    const { id } = req.user
+
+    const rejectedWithdrawals = await Withdrawal.findAll({ where: { user_id: id, status: "rejected" } })
+    if (rejectedWithdrawals) {
+      for (const item of rejectedWithdrawals) await item.destroy()
+    }
+
+    const approvedWithdrawals = await Withdrawal.findAll({ where: { user_id: id, status: "approved" } })
+
+    if (approvedWithdrawals)
+      for (const item of approvedWithdrawals) await item.update({ status: "completed" })
+
+    return res.send({ success: true, message: "Your withdrawal request has been fully processed." })
+  } catch (e) {
+    console.log(e);
+    res.status(500).send({ success: false, message: "failed to confirm a withdrawal" })
+  }
+}
 module.exports = {
   getProfile,
   updateProfile,
   changePassword,
   startStaking,
   convertToUSDT,
-  withdrawalRequest
+  withdrawalRequest,
+  confirmUpdatedWithdrawl
 }; 

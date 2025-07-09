@@ -34,5 +34,6 @@ router.put('/change-password', passwordChangeValidation, userController.changePa
 router.post('/staking', userController.startStaking);
 router.post('/exchange', userController.convertToUSDT);
 router.post('/withdraw', userController.withdrawalRequest);
+router.post('/confirm-withdrawal', userController.confirmUpdatedWithdrawl);
 
 module.exports = router; 
