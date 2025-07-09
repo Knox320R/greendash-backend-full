@@ -22,10 +22,10 @@ module.exports = {
       type: {
         type: Sequelize.ENUM(
           'staking',
-          'referral',
+          'weak_leg_bonus',
           'withdrawal',
           'purchase',
-          'airdrop',
+          'daily_bonus',
           'admin_adjustment'
         ),
         allowNull: false,
@@ -42,14 +42,9 @@ module.exports = {
         comment: 'Amount of the transaction',
       },
       currency: {
-        type: Sequelize.STRING(10),
+        type: Sequelize.ENUM('USDT', "EGD"),
         allowNull: false,
-        defaultValue: 'EGD',
-      },
-      status: {
-        type: Sequelize.ENUM('pending', 'completed', 'failed'),
-        allowNull: false,
-        defaultValue: 'completed',
+        defaultValue: 'USDT',
       },
       notes: {
         type: Sequelize.TEXT,

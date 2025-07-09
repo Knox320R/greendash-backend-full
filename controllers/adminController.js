@@ -1,6 +1,6 @@
 const { User, Staking, Transaction, Referral, AdminSetting, StakingPackage, RankPlan, CommissionPlan, TotalToken, Withdrawal } = require('../db/models');
 const { validationResult } = require('express-validator');
-const { Op } = require('sequelize');
+const { Op, where } = require('sequelize');
 const moment = require('moment');
 
 // Get admin dashboard statistics
@@ -21,17 +21,17 @@ const getDashboardStats = async (req, res) => {
     });
     const totalStakedAmount = activeStakingsWithPackages.reduce((sum, staking) => { return sum + parseFloat(staking.package?.stake_amount || 0); }, 0);
     // Calculate total rewards paid from transactions
-    const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'staking', direction: 'out', currency: "EGD", status: 'completed' } });
+    const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'staking', direction: 'out', currency: "EGD" } });
 
     // Financial statistics - calculate from transactions
-    const totalInvested = await Transaction.sum('amount', { where: { type: 'staking', direction: 'in', currency: "USDT", status: 'completed' } });
-    const totalEarned = await Transaction.sum('amount', { where: { currency: 'USDT', direction: 'in', status: 'completed' } });
-    const totalWithdrawn = await Transaction.sum('amount', { where: { type: 'withdrawal', direction: 'out', currency: "USDT", status: 'completed' } });
+    const totalInvested = await Transaction.sum('amount', { where: { type: 'staking', direction: 'in', currency: "USDT" } });
+    const totalEarned = await Transaction.sum('amount', { where: { currency: 'USDT', direction: 'in' } });
+    const totalWithdrawn = await Transaction.sum('amount', { where: { direction: 'out', currency: "USDT" } });
 
     // Transaction statistics
     const totalTransactions = await Transaction.count();
-    const pendingTransactions = await Transaction.count({ where: { status: 'pending' } });
-    const completedTransactions = await Transaction.count({ where: { status: 'completed' } });
+    const withdrawalTransactions = await Transaction.count({ where: {type: "staking"} });
+    const stakingTransactions = await Transaction.count({ where: {type: "withdrawal"} });
 
     // Withdrawal statistics
     const pendingWithdrawals = await Withdrawal.count({ where: { status: 'pending' } });
@@ -59,8 +59,8 @@ const getDashboardStats = async (req, res) => {
         },
         transactions: {
           total: totalTransactions,
-          pending: pendingTransactions,
-          completed: completedTransactions
+          staking: stakingTransactions,
+          withdrawals: withdrawalTransactions 
         },
         withdrawals: {
           pending: pendingWithdrawals,
@@ -211,7 +211,7 @@ const getTablePagenation = async (req, res) => {
       case "withdrawals": {
         list = await Withdrawal.findAll({
           include: [
-            { model: User, as: 'user', attributes: ['email', 'name'] }
+            { model: User, as: 'user', attributes: ['email', 'name', 'wallet_address'] }
           ],
           order: [['created_at', 'DESC']],
           limit,
@@ -228,7 +228,7 @@ const getTablePagenation = async (req, res) => {
           order: [['created_at', 'DESC']],
           limit,
           offset,
-          attributes: ['id', 'type', 'direction', 'amount', 'status', 'created_at']
+          attributes: ['id', 'type', 'direction', 'amount', 'currency', 'created_at']
         });
         break
       }
@@ -284,6 +284,7 @@ const ApproveWithdrawal = async (req, res) => {
   try {
     const { id } = req.body
     const withdrawal = await Withdrawal.findByPk(id)
+    await Transaction.create({ user_id: withdrawal.user_id, type: 'withdrawal', direction: 'out', amount: withdrawal.amount, currency: 'USDT', notes: "" })
     await withdrawal.update({ status: "approved" })
     res.send({ success: true, message: "success to approve user withdrawal" })
   } catch (e) {

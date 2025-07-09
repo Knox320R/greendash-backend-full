@@ -13,14 +13,14 @@ module.exports = {
       {
         user_id: 2,
         amount: 200,
-        status: 'approved',
+        status: 'pending',
         created_at: new Date(Date.now() - 2000000),
         updated_at: new Date(Date.now() - 2000000)
       },
       {
         user_id: 3,
         amount: 150,
-        status: 'pending',
+        status: 'approved',
         created_at: new Date(Date.now() - 3000000),
         updated_at: new Date(Date.now() - 3000000)
       },
@@ -41,7 +41,7 @@ module.exports = {
       {
         user_id: 6,
         amount: 400,
-        status: 'approved',
+        status: 'completed',
         created_at: new Date(Date.now() - 6000000),
         updated_at: new Date(Date.now() - 6000000)
       },
@@ -69,35 +69,35 @@ module.exports = {
       {
         user_id: 10,
         amount: 600,
-        status: 'approved',
+        status: 'rejected',
         created_at: new Date(Date.now() - 10000000),
         updated_at: new Date(Date.now() - 10000000)
       },
       {
         user_id: 1,
         amount: 100,
-        status: 'rejected',
+        status: 'completed',
         created_at: new Date(Date.now() - 1000000),
         updated_at: new Date(Date.now() - 1000000)
       },
       {
         user_id: 2,
         amount: 200,
-        status: 'rejected',
+        status: 'pending',
         created_at: new Date(Date.now() - 2000000),
         updated_at: new Date(Date.now() - 2000000)
       },
       {
         user_id: 3,
         amount: 150,
-        status: 'processing',
+        status: 'pending',
         created_at: new Date(Date.now() - 3000000),
         updated_at: new Date(Date.now() - 3000000)
       },
       {
         user_id: 4,
         amount: 300,
-        status: 'completed',
+        status: 'approved',
         created_at: new Date(Date.now() - 4000000),
         updated_at: new Date(Date.now() - 4000000)
       },
@@ -125,21 +125,21 @@ module.exports = {
       {
         user_id: 8,
         amount: 500,
-        status: 'rejected',
+        status: 'approved',
         created_at: new Date(Date.now() - 8000000),
         updated_at: new Date(Date.now() - 8000000)
       },
       {
         user_id: 9,
         amount: 450,
-        status: 'processing',
+        status: 'rejected',
         created_at: new Date(Date.now() - 9000000),
         updated_at: new Date(Date.now() - 9000000)
       },
       {
         user_id: 10,
         amount: 600,
-        status: 'failed',
+        status: 'pending',
         created_at: new Date(Date.now() - 10000000),
         updated_at: new Date(Date.now() - 10000000)
       }

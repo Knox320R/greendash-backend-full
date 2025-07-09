@@ -25,7 +25,7 @@ module.exports = {
         comment: 'Withdrawal amount'
       },
       status: {
-        type: Sequelize.ENUM('pending', 'approved', 'rejected', 'processing', 'completed', 'failed'),
+        type: Sequelize.ENUM('pending', 'approved', 'completed', 'rejected'),
         allowNull: false,
         defaultValue: 'pending'
       },

@@ -217,11 +217,10 @@ const withdrawalRequest = async (req, res) => {
     if(amount > withdrawals) req.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount."})
     
     const newUser = await user.update({ withdrawals: withdrawals - amount })
-    const transaction = await Transaction.create({ user_id, type: "withdrawal", direction: "out", amount, currency: "USDT", status: "pending", notes: user.name + " requests withdrawal" });
   
     const withdrawal = await Withdrawal.create({ user_id, amount, status: "pending" })
 
-    res.send({ success: true, message: "Your request is pending for admin check. please wait till admin admit it.", newUser, transaction, withdrawal })
+    res.send({ success: true, message: "Your request is pending for admin check. please wait till admin admit it.", newUser, withdrawal })
 
   } catch (e) {
     console.log(e);

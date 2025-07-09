@@ -10,8 +10,11 @@ const ERC20_ABI = [
 
 async function startListening(callback) {
 
+    const usdt_info = await AdminSetting.findOne({ where: { title: 'usdt_token_address' } })
+    const usdt_token_address = usdt_info.value
+
     const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
-    const contract = new ethers.Contract(process.env.USDT_ADDRESS, ERC20_ABI, provider);
+    const contract = new ethers.Contract(usdt_token_address, ERC20_ABI, provider);
     const decimals = await contract.decimals();
     const symbol = await contract.symbol();
   

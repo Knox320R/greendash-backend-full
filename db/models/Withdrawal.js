@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       comment: 'Withdrawal amount'
     },
     status: {
-      type: DataTypes.ENUM('pending', 'approved', 'rejected', 'processing', 'completed', 'failed'),
+      type: DataTypes.ENUM('pending', 'approved', 'completed', 'rejected'),
       allowNull: false,
       defaultValue: 'pending'
     }

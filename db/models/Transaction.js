@@ -9,12 +9,12 @@ module.exports = (sequelize, DataTypes) => {
     type: {
       type: DataTypes.ENUM(
         'staking',
-        'referral',
+        'weak_leg_bonus',
         'withdrawal',
         'purchase',
-        'airdrop',
+        'daily_bonus',
         'admin_adjustment'
-      ),
+    ),
       allowNull: false,
     },
     direction: {
@@ -26,14 +26,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     currency: {
-      type: DataTypes.STRING(10),
+      type: DataTypes.ENUM('USDT', 'EGD'),
       allowNull: false,
-      defaultValue: 'EGD',
-    },
-    status: {
-      type: DataTypes.ENUM('pending', 'completed', 'failed'),
-      allowNull: false,
-      defaultValue: 'completed',
+      defaultValue: 'USDT',
     },
     notes: {
       type: DataTypes.TEXT,

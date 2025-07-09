@@ -1,4 +1,4 @@
-const { TxHash, User, Staking, Transaction, AdminSetting, StakingPackage, RankPlan, CommissionPlan, TotalToken } = require('../db/models');
+const { TxHash, Withdrawal, User, Staking, Transaction, AdminSetting, StakingPackage, RankPlan, CommissionPlan, TotalToken } = require('../db/models');
 const { generateToken } = require('../middleware/auth');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 const { validateEmail, validateString } = require('../utils/validation');
@@ -324,7 +324,7 @@ async function getDashboard(user_id) {
     // Get recent transactions
     const recent_transactions = await Transaction.findAll({
       where: { user_id },
-      attributes: ['id', 'type', 'direction', 'amount', 'currency', 'status', 'notes', 'created_at'],
+      attributes: ['id', 'type', 'direction', 'amount', 'currency', 'notes', 'created_at'],
       order: [['created_at', 'DESC']],
       limit: 10
     });
@@ -430,7 +430,7 @@ async function getDashboard(user_id) {
 
     const upline_users = await getUplineUsers(user_id, max_level);
     const referralNetwork = await getReferralNetworkWithIncome(user_id, 1);
-
+    const updated_withdrawals = await Withdrawal.findAll({ where: { user_id, status: { [Op.in]: ['approved', 'rejected'] } } })
     // Clean up arrays (remove undefined entries)
     each_level_income = each_level_income.filter(income => income !== undefined);
     each_level_affiliater_number = each_level_affiliater_number.filter(count => count !== undefined);
@@ -462,7 +462,8 @@ async function getDashboard(user_id) {
         network: referralNetwork
       },
       upline_users,
-      recent_transactions
+      recent_transactions,
+      updated_withdrawals
     };
   } catch (error) {
     console.error('Get dashboard error:', error);

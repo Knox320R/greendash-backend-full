@@ -84,7 +84,6 @@ SENDGRID_API_KEY=your_sendgrid_api_key
 SENDGRID_FROM_EMAIL=your_email@example.com
 
 # USDT BEP-20 Configuration
-USDT_CONTRACT_ADDRESS=0x55d398326f99059fF775485246999027B3197955
 BSC_RPC_URL=https://bsc-dataseed1.binance.org/
 BINANCE_WALLET_ADDRESS=your_binance_wallet_address
 
