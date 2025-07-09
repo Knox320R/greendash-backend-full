@@ -13,6 +13,8 @@ router.use(requireAdmin);
 // Dashboard and statistics
 router.get('/main', adminController.getDashboardStats);
 router.put('/main', adminController.updateAdminSettings);
+router.post('/main', adminController.createAdminSettings);
+router.delete('/main/:table_name/:id', adminController.deleteAdminSettings);
 router.post('/pagenation', adminController.getTablePagenation);
 
 // User management

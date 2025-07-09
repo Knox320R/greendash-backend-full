@@ -1,10 +1,7 @@
 const express = require('express');
 const authRoutes = require('./auth');
 const userRoutes = require('./users');
-const stakingRoutes = require('./staking');
 const adminRoutes = require('./admin');
-const paymentRoutes = require('./payments');
-const referralRoutes = require('./referrals');
 
 const router = express.Router();
 
@@ -14,10 +11,7 @@ const API_PREFIX = '/api/v1';
 // Mount routes
 router.use(`${API_PREFIX}/auth`, authRoutes);
 router.use(`${API_PREFIX}/users`, userRoutes);
-// router.use(`${API_PREFIX}/staking`, stakingRoutes);
 router.use(`${API_PREFIX}/admin`, adminRoutes);
-// router.use(`${API_PREFIX}/payments`, paymentRoutes);
-// router.use(`${API_PREFIX}/referrals`, referralRoutes);
 
 // Health check endpoint
 router.get('/health', (req, res) => {

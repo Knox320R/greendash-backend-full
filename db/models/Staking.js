@@ -14,7 +14,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: { model: 'users', key: 'id' },
-      onUpdate: 'CASCADE',
     },
     package_id: {
       type: DataTypes.INTEGER,

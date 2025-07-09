@@ -43,6 +43,7 @@ module.exports = (sequelize, DataTypes) => {
         model: 'users', 
         key: 'id' 
       },
+      onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
       comment: 'Universal referral system - who referred this user'
     },

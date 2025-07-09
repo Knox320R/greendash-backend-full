@@ -1,7 +1,5 @@
-const { Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, Referral, StakingPackage, CommissionPlan } = require('../db/models');
+const { Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
-const { Op, DATE } = require('sequelize');
-const { getCreatedDate } = require('../utils/common');
 
 // Get user profile
 const getProfile = async (req, res) => {
@@ -57,9 +55,7 @@ const updateProfile = async (req, res) => {
     if (is_active) updated_ata.is_active = is_active;
     if (wallet_address) updated_ata.wallet_address = wallet_address;
 
-    const newuser = await req.user.update(updated_ata);
-
-    res.json({
+    return res.json({
       success: true,
       message: 'Profile updated successfully'
     });

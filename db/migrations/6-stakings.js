@@ -16,6 +16,7 @@ module.exports = {
           model: 'users',
           key: 'id'
         },
+        onDelete: "CASCADE",
         onUpdate: 'CASCADE',
       },
       package_id: {
@@ -25,6 +26,7 @@ module.exports = {
           model: 'staking_packages',
           key: 'id'
         },
+        onDelete: "CASCADE",
         onUpdate: 'CASCADE',
       },
       status: {

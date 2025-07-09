@@ -29,6 +29,7 @@ module.exports = {
         defaultValue: 1,
         references: { model: 'users', key: 'id' },
         onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
       },
       parent_leg: {
         type: Sequelize.ENUM('left', 'right'),

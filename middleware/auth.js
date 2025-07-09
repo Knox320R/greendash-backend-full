@@ -24,7 +24,7 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    if (!user.is_email_verified) {
+    if (!user.is_email_verified || !user.is_active) {
       return res.status(401).json({
         success: false,
         message: 'Account is deactivated'

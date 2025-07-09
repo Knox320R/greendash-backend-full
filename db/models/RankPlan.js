@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
 
   RankPlan.init({
     rank: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(250),
       allowNull: false,
       unique: true
     },
@@ -21,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 0
     },
     equivalent: {
-      type: DataTypes.STRING(50),
+      type: DataTypes.STRING(250),
       allowNull: true
     }
   }, {

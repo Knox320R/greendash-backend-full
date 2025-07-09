@@ -10,7 +10,7 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       rank: {
-        type: Sequelize.STRING(50),
+        type: Sequelize.STRING(250),
         allowNull: false,
         unique: true,
         comment: 'Rank name, e.g. Bronze, Silver, Gold'
@@ -27,7 +27,7 @@ module.exports = {
         comment: 'Bonus amount = 5% of volume for that rank'
       },
       equivalent: {
-        type: Sequelize.STRING(100),
+        type: Sequelize.STRING(250),
         allowNull: true,
         comment: 'Optional electric vehicle reward'
       },

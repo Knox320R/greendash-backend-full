@@ -79,33 +79,102 @@ const getDashboardStats = async (req, res) => {
 
 const updateAdminSettings = async (req, res) => {
   try {
-    const { field_name, data } = req.body
+    const { table_name, data } = req.body
     const { id } = data
-    let model = undefined
-    switch (field_name) {
+    let row = undefined
+    switch (table_name) {
       case "admin_settings": {
-        model = await AdminSetting.findByPk(id)
+        row = await AdminSetting.findByPk(id)
         break
       }
       case "staking_packages": {
-        model = await StakingPackage.findByPk(id)
+        row = await StakingPackage.findByPk(id)
         break
       }
       case "rank_plans": {
-        model = await RankPlan.findByPk(id)
+        row = await RankPlan.findByPk(id)
         break
       }
       case "commission_plans": {
-        model = await CommissionPlan.findByPk(id)
+        row = await CommissionPlan.findByPk(id)
         break
       }
       case "total_tokens": {
-        model = await TotalToken.findByPk(id)
+        row = await TotalToken.findByPk(id)
         break
       }
     }
-    await model.update(data)
+    await row.update(data)
     return res.send({ success: true, message: "successfully updated" })
+  } catch (e) {
+    console.log(e);
+    return res.status(500).send("failed to update setting data")
+  }
+}
+
+const deleteAdminSettings = async (req, res) => {
+  try {
+    const { table_name, id } = req.params
+    console.log(table_name, id);
+    let row = undefined
+    switch (table_name) {
+      case "admin_settings": {
+        row = await AdminSetting.findByPk(id)
+        break
+      }
+      case "staking_packages": {
+        row = await StakingPackage.findByPk(id)
+        break
+      }
+      case "rank_plans": {
+        row = await RankPlan.findByPk(id)
+        break
+      }
+      case "commission_plans": {
+        row = await CommissionPlan.findByPk(id)
+        break
+      }
+      case "total_tokens": {
+        row = await TotalToken.findByPk(id)
+        break
+      }
+    }
+    await row.destroy()
+    return res.send({ success: true, message: "successfully deleted" })
+  } catch (e) {
+    console.log(e);
+    return res.status(500).send("failed to update setting data")
+  }
+}
+
+const createAdminSettings = async (req, res) => {
+  try {
+    const { table_name, data } = req.body
+    console.log(table_name, data);
+    let model = undefined
+    switch (table_name) {
+      case "admin_settings": {
+        model = await AdminSetting.create(data)
+        break
+      }
+      case "staking_packages": {
+        model = await StakingPackage.create(data)
+        break
+      }
+      case "rank_plans": {
+        model = await RankPlan.create(data)
+        break
+      }
+      case "commission_plans": {
+        model = await CommissionPlan.create(data)
+        break
+      }
+      case "total_tokens": {
+        model = await TotalToken.create(data)
+        break
+      }
+    }
+    return res.send({ success: true, message: "successfully created", newRow: model })
   } catch (e) {
     console.log(e);
     return res.status(500).send("failed to update setting data")
@@ -249,5 +318,7 @@ module.exports = {
   RejectWithdrawal,
   ApproveWithdrawal,
   ApproveWithdrawal,
-  RejectWithdrawal
+  RejectWithdrawal,
+  deleteAdminSettings,
+  createAdminSettings
 }; 
