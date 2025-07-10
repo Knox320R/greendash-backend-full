@@ -8,12 +8,12 @@ module.exports = (sequelize, DataTypes) => {
       // Universal referral system
       User.belongsTo(models.User, { foreignKey: 'referred_by', as: 'referrer' });
       User.hasMany(models.User, { foreignKey: 'referred_by', as: 'referrals' });
-      
+
       // Other associations
       User.hasMany(models.Transaction, { foreignKey: 'user_id' });
       User.hasMany(models.Staking, { foreignKey: 'user_id', as: 'stakings' });
       User.hasMany(models.Withdrawal, { foreignKey: 'user_id', as: 'withdrawal_requests' });
-      
+
       // Staking package association
       User.hasMany(models.Staking, { foreignKey: 'user_id' });
       models.Staking.belongsTo(models.StakingPackage, { foreignKey: 'package_id' });
@@ -39,13 +39,24 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1,
-      references: { 
-        model: 'users', 
-        key: 'id' 
+      references: {
+        model: 'users',
+        key: 'id'
       },
       onDelete: 'CASCADE',
       onUpdate: 'CASCADE',
       comment: 'Universal referral system - who referred this user'
+    },
+    rank_goal: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      references: {
+        model: 'rank_plans',
+        key: 'id'
+      },
+      onDelete: "CASCADE",
+      onUpdate: 'CASCADE',
     },
     parent_leg: {
       type: DataTypes.ENUM('left', 'right'),
@@ -173,29 +184,29 @@ module.exports = (sequelize, DataTypes) => {
   };
 
   // Binary network volume calculation methods
-  User.prototype.getTotalVolume = function() {
+  User.prototype.getTotalVolume = function () {
     return Number(this.left_volume || 0) + Number(this.right_volume || 0);
   };
 
-  User.prototype.getWeakerLeg = function() {
+  User.prototype.getWeakerLeg = function () {
     const leftVol = Number(this.left_volume || 0);
     const rightVol = Number(this.right_volume || 0);
     return leftVol <= rightVol ? 'left' : 'right';
   };
 
-  User.prototype.getStrongerLeg = function() {
+  User.prototype.getStrongerLeg = function () {
     const leftVol = Number(this.left_volume || 0);
     const rightVol = Number(this.right_volume || 0);
     return leftVol >= rightVol ? 'left' : 'right';
   };
 
-  User.prototype.getWeakerVolume = function() {
+  User.prototype.getWeakerVolume = function () {
     const leftVol = Number(this.left_volume || 0);
     const rightVol = Number(this.right_volume || 0);
     return Math.min(leftVol, rightVol);
   };
 
-  User.prototype.getStrongerVolume = function() {
+  User.prototype.getStrongerVolume = function () {
     const leftVol = Number(this.left_volume || 0);
     const rightVol = Number(this.right_volume || 0);
     return Math.max(leftVol, rightVol);

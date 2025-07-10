@@ -8,43 +8,35 @@ module.exports = (sequelize, DataTypes) => {
     },
     type: {
       type: DataTypes.ENUM(
-        'staking',
-        'weak_leg_bonus',
-        'withdrawal',
-        'purchase',
-        'daily_bonus',
+        'staking',              //  EGD
+        'withdrawal',           //  USDT
+        'purchase',             //  EGD
+        'daily_reward',         //  EGD
+        'universal_cashback',   //  EGD
+        'unilevel_commission',  //  USDT
+        'weak_leg_bonus',       //  USDT
         'admin_adjustment'
-    ),
-      allowNull: false,
-    },
-    direction: {
-      type: DataTypes.ENUM('in', 'out'),
+      ),
       allowNull: false,
     },
     amount: {
       type: DataTypes.DECIMAL(20, 8),
       allowNull: false,
     },
-    currency: {
-      type: DataTypes.ENUM('USDT', 'EGD'),
-      allowNull: false,
-      defaultValue: 'USDT',
-    },
-    notes: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
+    created_at: {
+      type: DataTypes.DATE
+    }
   }, {
     tableName: 'transactions',
     underscored: true,
-    timestamps: true,
+    timestamps: false,
     indexes: [
       { fields: ['user_id'] },
       { fields: ['type'] },
     ]
   });
 
-  Transaction.associate = function(models) {
+  Transaction.associate = function (models) {
     Transaction.belongsTo(models.User, {
       foreignKey: 'user_id',
       as: 'user',

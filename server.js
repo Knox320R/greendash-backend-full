@@ -76,12 +76,15 @@ async function startServer() {
     }
     
     // Start the daily bonus scheduler
-    await startDailyBonusScheduler();
+    console.log('🔄 Starting daily bonus scheduler...');
+    try {
+      await startDailyBonusScheduler();
+      console.log('✅ Daily bonus scheduler started successfully');
+    } catch (error) {
+      console.error('❌ Error starting daily bonus scheduler:', error);
+      console.error('Error stack:', error.stack);
+    }
     app.listen(PORT, () => {
-      console.log(`🚀 GreenDash Backend server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🔗 Health check: http://localhost:${PORT}/health`);
-      console.log(`📚 API Documentation: http://localhost:${PORT}/api/v1`);
       console.log(`⏰ Server started at: ${new Date().toISOString()}`);
     });
   } catch (error) {

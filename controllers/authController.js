@@ -324,7 +324,6 @@ async function getDashboard(user_id) {
     // Get recent transactions
     const recent_transactions = await Transaction.findAll({
       where: { user_id },
-      attributes: ['id', 'type', 'direction', 'amount', 'currency', 'notes', 'created_at'],
       order: [['created_at', 'DESC']],
       limit: 10
     });

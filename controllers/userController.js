@@ -133,33 +133,30 @@ const startStaking = async (req, res) => {
     const unilevel_depth = await CommissionPlan.count()
 
     await tx.destroy();
-    const newTransaction = await Transaction.create({ user_id, type: "staking", direction: "in", amount: package.stake_amount, currency: "EGD", status: "completed", notes: "Staking " + package.name })
+    const newTransaction = await Transaction.create({ user_id, type: "staking", amount: package.stake_amount })
     const new_staking = await Staking.create({ user_id, package_id, status: "active" })
 
     const parent = await User.findByPk(user.referred_by)
-    console.log(usdt_amount);
+
     if (user.parent_leg === "left") {
-      const left_volume = (parseFloat(parent.left_volume) + usdt_amount).toString();
-      await parent.update({ left_volume })
+      await parent.increment('left_volume', { by: usdt_amount })
     } else if (user.parent_leg === "right") {
-      console.log(parent.right_volume);
-      const right_volume = (parseFloat(parent.right_volume) + usdt_amount).toString();
-      console.log(right_volume);
-      await parent.update({ right_volume })
+      await parent.increment( 'right_volume', { by: usdt_amount })
     }
 
     let ref = user.referred_by;
     for (let i = 1; i <= unilevel_depth; i++) {
       const referrer = await User.findByPk(ref)
       const unilevel = unilevel_list.find(item => item.level === i)
-      const withdrawals = (parseFloat(referrer.withdrawals) + usdt_amount * unilevel.commission_percent / 100).toString();
-      await referrer.update({ withdrawals: withdrawals })
+      const withdrawal_increment = usdt_amount * parseFloat(unilevel.commission_percent) / 100;
+      await referrer.increment('withdrawals', { by: withdrawal_increment })
+      await Transaction.create({ user_id: referrer.id, type: "unilevel_commission", amount: withdrawal_increment })
       if (ref === 1) break
       ref = referrer.referred_by;
     }
 
     const daily_pool = await AdminSetting.findOne({ where: { title: "daily_pool" } })
-    const new_pool = Number(daily_pool.value) + Number(package.stake_amount)
+    const new_pool = parseFloat(daily_pool.value) + parseFloat(package.stake_amount)
     await daily_pool.update({ value: new_pool })
 
     const newStaking = {
@@ -217,7 +214,7 @@ const withdrawalRequest = async (req, res) => {
     const withdrawals = parseFloat(user.withdrawals)
     if (amount > withdrawals) req.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount." })
 
-    const newUser = await user.update({ withdrawals: withdrawals - amount })
+    const newUser = await user.update({ withdrawals: (withdrawals - amount) })
 
     const withdrawal = await Withdrawal.create({ user_id, amount, status: "pending" })
 

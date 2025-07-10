@@ -68,6 +68,17 @@ module.exports = {
         allowNull: false,
         defaultValue: 0
       },
+      rank_goal: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        defaultValue: 1,
+        references: {
+          model: 'rank_plans',
+          key: 'id'
+        },
+        onDelete: "CASCADE",
+        onUpdate: 'CASCADE',
+      },
       withdrawals: {
         type: Sequelize.DECIMAL(20, 8),
         allowNull: false,

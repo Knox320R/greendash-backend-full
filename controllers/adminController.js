@@ -21,12 +21,12 @@ const getDashboardStats = async (req, res) => {
     });
     const totalStakedAmount = activeStakingsWithPackages.reduce((sum, staking) => { return sum + parseFloat(staking.package?.stake_amount || 0); }, 0);
     // Calculate total rewards paid from transactions
-    const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'staking', direction: 'out', currency: "EGD" } });
+    const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'staking' } });
 
     // Financial statistics - calculate from transactions
-    const totalInvested = await Transaction.sum('amount', { where: { type: 'staking', direction: 'in', currency: "USDT" } });
-    const totalEarned = await Transaction.sum('amount', { where: { currency: 'USDT', direction: 'in' } });
-    const totalWithdrawn = await Transaction.sum('amount', { where: { direction: 'out', currency: "USDT" } });
+    const totalInvested = await Transaction.sum('amount', { where: { type: 'staking' } });
+    const totalEarned = await Transaction.sum('amount', { where: { type: { [Op.in]: ['staking', 'purchase']} } });
+    const totalWithdrawn = await Transaction.sum('amount', { where: { type: 'withdrawal' } });
 
     // Transaction statistics
     const totalTransactions = await Transaction.count();
@@ -228,7 +228,7 @@ const getTablePagenation = async (req, res) => {
           order: [['created_at', 'DESC']],
           limit,
           offset,
-          attributes: ['id', 'type', 'direction', 'amount', 'currency', 'created_at']
+          attributes: ['id', 'type', 'amount', 'created_at']
         });
         break
       }
@@ -284,7 +284,10 @@ const ApproveWithdrawal = async (req, res) => {
   try {
     const { id } = req.body
     const withdrawal = await Withdrawal.findByPk(id)
-    await Transaction.create({ user_id: withdrawal.user_id, type: 'withdrawal', direction: 'out', amount: withdrawal.amount, currency: 'USDT', notes: "" })
+    const platform_fee_item = await AdminSetting.findOne({ where: { title: "platform_fee" } })
+    const platform_fee = parseFloat(platform_fee_item.value)
+    const amount = parseFloat(withdrawal.amount) * platform_fee / 100;
+    await Transaction.create({ user_id: withdrawal.user_id, type: 'withdrawal', amount })
     await withdrawal.update({ status: "approved" })
     res.send({ success: true, message: "success to approve user withdrawal" })
   } catch (e) {
