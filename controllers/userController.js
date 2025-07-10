@@ -1,6 +1,7 @@
 const { where } = require('sequelize');
 const { Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
+const { getCreatedDate } = require('../utils/common');
 
 // Get user profile
 const getProfile = async (req, res) => {
@@ -215,11 +216,10 @@ const withdrawalRequest = async (req, res) => {
 
     if (amount > withdrawals) req.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount." })
 
-    const newUser = await user.increment('withdrawals', { by: -amount })
-
+    await user.increment('withdrawals', { by: -amount })
     const withdrawal = await Withdrawal.create({ user_id, amount, status: "pending" })
 
-    res.send({ success: true, message: "Your request is pending for admin check. please wait till admin admit it.", newUser, withdrawal })
+    res.send({ success: true, message: "Your request is pending for admin check. please wait till admin admit it.", withdrawal })
 
   } catch (e) {
     console.log(e);
@@ -230,14 +230,15 @@ const withdrawalRequest = async (req, res) => {
 const confirmUpdatedWithdrawl = async (req, res) => {
   try {
     const { id } = req.user
-
+    console.log(id);
     const rejectedWithdrawals = await Withdrawal.findAll({ where: { user_id: id, status: "rejected" } })
+    console.log(rejectedWithdrawals);
     if (rejectedWithdrawals) {
       for (const item of rejectedWithdrawals) await item.destroy()
     }
 
     const approvedWithdrawals = await Withdrawal.findAll({ where: { user_id: id, status: "approved" } })
-
+    console.log(approvedWithdrawals);
     if (approvedWithdrawals)
       for (const item of approvedWithdrawals) await item.update({ status: "completed" })
 

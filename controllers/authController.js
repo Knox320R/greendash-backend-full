@@ -92,12 +92,12 @@ const login = async (req, res) => {
     // Find user
     const user = await User.findOne({ where: { email }});
     if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    if (!user.is_active) return res.status(401).json({ success: false, message: 'You are disabled' });
     // Check email verified
     if (!user.is_email_verified) {
       await sendVerificationEmail(user.email, user.email_verification_token, `${process.env.FRONTEND_URL}/register?ref=${user.referral_code}`);
       return res.status(401).json({ success: false, message: 'You should pass the email verification. We sent a new email verification token. Please check your email inbox now' });
     }
+    if (!user.is_active) return res.status(401).json({ success: false, message: 'You are disabled' });
     // Check password
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) return res.status(401).json({ success: false, message: 'Invalid email or password' });
@@ -298,7 +298,7 @@ async function getDashboard(user_id) {
     // Get active stakings with package details
     const recent_Stakings = await Staking.findAll({ where: { user_id }, include: [{ model: StakingPackage, as: 'package' }], order: [['created_at', 'DESC']], limit: 100 });
     const recent_transactions = await Transaction.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 });
-    const recent_withdrawals = await Withdrawal.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 })
+    const recent_withdrawals = await Withdrawal.findAll({ where: { user_id, status: { [Op.in]: ['rejected', 'approved'] }  }, order: [['created_at', 'DESC']], limit: 100 })
     // Clean up arrays (remove undefined entries)
 
     return {

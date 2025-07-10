@@ -25,6 +25,7 @@ async function startListening(callback) {
         const tx_hash = event?.log?.transactionHash || "00000000";
         const platform = await AdminSetting.findOne({ where: { title: 'platform_wallet_address' } })
         const platform_address = platform?.value || '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e'
+        console.log(platform_address);
         if(to === platform_address) await TxHash.create({ tx_hash, amount, created_at: new Date() })
         callback({
             from,
