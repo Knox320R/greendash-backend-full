@@ -90,59 +90,27 @@ const login = async (req, res) => {
     }
 
     // Find user
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-    if (!user.is_active) {
-      return res.status(401).json({ success: false, message: 'You are disabled' });
-    }
-
+    const user = await User.findOne({ where: { email }});
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    if (!user.is_active) return res.status(401).json({ success: false, message: 'You are disabled' });
     // Check email verified
     if (!user.is_email_verified) {
       await sendVerificationEmail(user.email, user.email_verification_token, `${process.env.FRONTEND_URL}/register?ref=${user.referral_code}`);
       return res.status(401).json({ success: false, message: 'You should pass the email verification. We sent a new email verification token. Please check your email inbox now' });
     }
-
     // Check password
     const isValidPassword = await user.comparePassword(password);
-    if (!isValidPassword) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-
+    if (!isValidPassword) return res.status(401).json({ success: false, message: 'Invalid email or password' });
     // Update last login
     await user.update({ last_login: new Date() });
-
+    const now_user = {}
+    for(item of ['id', 'name', 'email', 'referral_code', 'is_admin', 'phone', 'wallet_address', 'egd_balance', 'withdrawals', 'referred_by', 'parent_leg', 'left_volume', 'right_volume', 'rank_goal']) now_user[item] = user[item]
+    now_user.created_at = getCreatedDate(user)
     // Generate JWT token
     const token = generateToken(user.id);
-
     // Get user dashboard data
     const user_base_data = await getDashboard(user.id);
-
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          referral_code: user.referral_code,
-          is_admin: user.is_admin,
-          phone: user.phone,
-          egd_balance: user.egd_balance,
-          withdrawals: user.withdrawals,
-          wallet_address: user.wallet_address,
-          referred_by: user.referred_by,
-          parent_leg: user.parent_leg,
-          left_volume: user.left_volume,
-          right_volume: user.right_volume,
-          created_at: getCreatedDate(user)
-        },
-        user_base_data,
-        token
-      }
-    });
+    return res.json({ success: true, message: 'Login successful', user: now_user, user_base_data, token });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: 'Login failed' });
@@ -287,109 +255,21 @@ const getLandingData = async (req, res) => {
 
 async function getDashboard(user_id) {
   try {
-    const commission_plan = await CommissionPlan.findAll();
     const max_level = await CommissionPlan.count();
-
-    // Get active stakings with package details
-    const entireStakings = await Staking.findAll({ where: { user_id, status: { [Op.in]: ['active', 'completed'] } }, include: [{ model: StakingPackage, as: 'package' }] });
-
-    // Calculate total staked amount
-    const totalStaked = entireStakings.reduce((sum, staking) => {
-      return Number((sum + parseFloat(staking.package.stake_amount || 0)).toFixed(8));
-    }, 0);
-
-    // Calculate total rewards earned (daily yield based on staking duration)
-    const totalRewardsEarned = entireStakings.reduce((sum, staking) => {
-      const stakingDate = getCreatedDate(staking);
-      if (staking.package && stakingDate) {
-        const now = new Date();
-        const daysDiff = Math.floor((now - stakingDate) / 86400000);
-        const dailyReward = (parseFloat(staking.package.stake_amount) * parseFloat(staking.package.daily_yield_percentage)) / 100;
-        const totalEarned = dailyReward * daysDiff;
-        return Number((sum + totalEarned).toFixed(8));
-      }
-      return sum;
-    }, 0);
-
-    // Calculate total rewards that will be received when staking period ends (365 days)
-    const totalRewardsClaimed = entireStakings.reduce((sum, staking) => {
-      if (staking.package) {
-        const dailyReward = (parseFloat(staking.package.stake_amount) * parseFloat(staking.package.daily_yield_percentage)) / 100;
-        const totalRewardsAtEnd = dailyReward * staking.package.lock_period_days; // 365 days
-        return Number((sum + totalRewardsAtEnd).toFixed(8));
-      }
-      return sum;
-    }, 0);
-
-    // Get recent transactions
-    const recent_transactions = await Transaction.findAll({
-      where: { user_id },
-      order: [['created_at', 'DESC']],
-      limit: 10
-    });
-
-    let total_earn_from_affiliation = 0;
-    let each_level_income = [];
-    let each_level_affiliater_number = [];
-
     // Get user's referral network (all levels from commission plans)
-    const getReferralNetworkWithIncome = async (referrerId, level = 1) => {
+    const getReferralNetwork = async (referrerId, level = 1) => {
       if (level > max_level) return [];
-      if (!each_level_income[level]) each_level_income[level] = 0;
-      each_level_affiliater_number[level] = each_level_affiliater_number[level] ? each_level_affiliater_number[level] + 1 : 1;
-
       // Find direct referrals using the new User model structure
       const referrals = await User.findAll({
         where: { referred_by: referrerId, is_admin: false },
-        attributes: ['id', 'name', 'email', 'created_at', 'egd_balance', 'parent_leg', 'left_volume', 'right_volume'],
-        order: [['created_at', 'ASC']]
+        attributes: ['id', 'name', 'email', 'created_at', 'parent_leg'],
       });
 
       const result = [];
       for (const referredUser of referrals) {
-
-        let commission_income = 0;
-        // Get referred user's stakings
-        const userStakings = await Staking.findAll({
-          where: { user_id: referredUser.id, status: { [Op.in]: ['active', 'completed'] } },
-          include: [{
-            model: StakingPackage,
-            as: 'package',
-            attributes: ['stake_amount']
-          }]
-        });
-
-        const userTotalStaked = userStakings.reduce((sum, staking) => {
-          return sum + parseFloat(staking.package.stake_amount || 0);
-        }, 0);
-
-        const commissionRate = commission_plan.find(plan => plan.level === level)?.commission_percent || 0;
-        commission_income = (userTotalStaked * commissionRate) / 100;
-        total_earn_from_affiliation += commission_income;
-        each_level_income[level] += commission_income;
-
-        // Recursively get sub-referrals and their incomes
-        const subReferrals = await getReferralNetworkWithIncome(referredUser.id, level + 1);
-
-        result.push({
-          id: referredUser.id,
-          level,
-          referred_user: {
-            id: referredUser.id,
-            name: referredUser.name,
-            email: referredUser.email,
-            created_at: referredUser.created_at,
-            egd_balance: referredUser.egd_balance,
-            parent_leg: referredUser.parent_leg,
-            left_volume: referredUser.left_volume,
-            right_volume: referredUser.right_volume
-          },
-          created_at: referredUser.created_at,
-          commission_income: Number(commission_income.toFixed(8)),
-          sub_referrals: subReferrals
-        });
+        const sub_referrals = await getReferralNetwork(referredUser.id, level + 1);
+        result.push({ level, referredUser, sub_referrals });
       }
-
       return result;
     };
 
@@ -403,24 +283,9 @@ async function getDashboard(user_id) {
         // Find the user who referred this user
         const currentUser = await User.findByPk(currentUserId);
         if (!currentUser || !currentUser.referred_by || currentUser.referred_by === 1) break; // Stop at admin
-
-        const uplineUser = await User.findByPk(currentUser.referred_by);
+        const uplineUser = await User.findByPk(currentUser.referred_by, { attributes: ['id', 'name', 'email', 'parent_leg', 'created_at'] });
         if (!uplineUser) break;
-
-        uplines.push({
-          level,
-          user: {
-            id: uplineUser.id,
-            name: uplineUser.name,
-            email: uplineUser.email,
-            created_at: uplineUser.created_at,
-            egd_balance: uplineUser.egd_balance,
-            parent_leg: uplineUser.parent_leg,
-            left_volume: uplineUser.left_volume,
-            right_volume: uplineUser.right_volume
-          }
-        });
-
+        uplines.push({ level, uplineUser });
         currentUserId = uplineUser.id;
         level++;
       }
@@ -428,41 +293,20 @@ async function getDashboard(user_id) {
     };
 
     const upline_users = await getUplineUsers(user_id, max_level);
-    const referralNetwork = await getReferralNetworkWithIncome(user_id, 1);
-    const updated_withdrawals = await Withdrawal.findAll({ where: { user_id, status: { [Op.in]: ['approved', 'rejected'] } } })
+    const referral_network = await getReferralNetwork(user_id, 1);
+
+    // Get active stakings with package details
+    const recent_Stakings = await Staking.findAll({ where: { user_id }, include: [{ model: StakingPackage, as: 'package' }], order: [['created_at', 'DESC']], limit: 100 });
+    const recent_transactions = await Transaction.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 });
+    const recent_withdrawals = await Withdrawal.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 })
     // Clean up arrays (remove undefined entries)
-    each_level_income = each_level_income.filter(income => income !== undefined);
-    each_level_affiliater_number = each_level_affiliater_number.filter(count => count !== undefined);
 
     return {
-      staking: {
-        total_staked: totalStaked,
-        total_rewards_earned: totalRewardsEarned,
-        total_rewards_claimed: totalRewardsClaimed,
-        entire_stakings: entireStakings.length,
-        stakings: entireStakings.map(staking => ({
-          id: staking.id,
-          stake_amount: staking.package.stake_amount,
-          status: staking.status,
-          start_date: getCreatedDate(staking),
-          now: new Date(),
-          package: staking.package ? {
-            id: staking.package.id,
-            name: staking.package.name,
-            daily_yield_percentage: staking.package.daily_yield_percentage,
-            lock_period_days: staking.package.lock_period_days
-          } : null
-        }))
-      },
-      referrals: {
-        total_earn_from_affiliation,
-        each_level_income,
-        each_level_affiliater_number,
-        network: referralNetwork
-      },
       upline_users,
+      referral_network,
+      recent_Stakings,
       recent_transactions,
-      updated_withdrawals
+      recent_withdrawals,
     };
   } catch (error) {
     console.error('Get dashboard error:', error);
@@ -478,4 +322,4 @@ module.exports = {
   resetPassword,
   logout,
   getLandingData,
-}; 
+};

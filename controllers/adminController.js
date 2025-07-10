@@ -227,8 +227,7 @@ const getTablePagenation = async (req, res) => {
           ],
           order: [['created_at', 'DESC']],
           limit,
-          offset,
-          attributes: ['id', 'type', 'amount', 'created_at']
+          offset
         });
         break
       }

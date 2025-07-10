@@ -141,7 +141,7 @@ const startStaking = async (req, res) => {
     if (user.parent_leg === "left") {
       await parent.increment('left_volume', { by: usdt_amount })
     } else if (user.parent_leg === "right") {
-      await parent.increment( 'right_volume', { by: usdt_amount })
+      await parent.increment('right_volume', { by: usdt_amount })
     }
 
     let ref = user.referred_by;
@@ -209,12 +209,13 @@ const withdrawalRequest = async (req, res) => {
   try {
     const user_id = req.user.id
     const { amount } = req.body
-    console.log(user_id, amount);
+
     const user = await User.findByPk(user_id)
     const withdrawals = parseFloat(user.withdrawals)
+
     if (amount > withdrawals) req.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount." })
 
-    const newUser = await user.update({ withdrawals: (withdrawals - amount) })
+    const newUser = await user.increment('withdrawals', { by: -amount })
 
     const withdrawal = await Withdrawal.create({ user_id, amount, status: "pending" })
 
