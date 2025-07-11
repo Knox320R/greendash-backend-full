@@ -147,7 +147,6 @@ const verifyEmail = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-
     try {
       validateEmail(email, 'Email');
     } catch (err) {
@@ -167,7 +166,7 @@ const forgotPassword = async (req, res) => {
     });
 
     await sendPasswordResetEmail(user.email, resetToken);
-    res.json({ success: true, message: 'Password reset email sent' });
+    res.json({ success: true, message: 'Password reset message sent to your email box' });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ success: false, message: 'Password reset failed' });
@@ -177,10 +176,10 @@ const forgotPassword = async (req, res) => {
 // Reset password
 const resetPassword = async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
+    const { token, password } = req.body;
 
     try {
-      validateString(newPassword, 'New Password', 3);
+      validateString(password, 'New Password', 3);
     } catch (err) {
       return res.status(400).json({ success: false, message: err.message });
     }
@@ -196,7 +195,7 @@ const resetPassword = async (req, res) => {
     }
 
     await user.update({
-      password: newPassword,
+      password: password,
       password_reset_token: null,
       password_reset_expires: null
     });

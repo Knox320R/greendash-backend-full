@@ -48,14 +48,9 @@ router.post('/login', loginValidation, authController.login);
 router.get('/landing', authController.getLandingData);
 router.get('/verify-email/:token', authController.verifyEmail);
 
+router.post('/forgot-password', authController.forgotPassword);
 // router.post('/resend-verification', authController.resendVerification);
-router.post('/forgot-password', [
-  body('email').isEmail().normalizeEmail()
-], authController.forgotPassword);
-router.post('/reset-password', [
-  body('token').notEmpty().withMessage('Token is required'),
-  ...passwordValidation
-], authController.resetPassword);
+router.post('/reset-password', authController.resetPassword);
 
 // // Protected routes
 // router.post('/connect-wallet', authenticateToken, walletValidation, authController.connectWallet);
