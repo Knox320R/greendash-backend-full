@@ -14,6 +14,10 @@ async function startListening(callback) {
     const usdt_token_address = usdt_info.value || '0x55d398326f99059fF775485246999027B3197955'   // USDT bep-20
 
     const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
+    // const provider = new ethers.JsonRpcProvider(process.env.BSC_MAINNET);
+    console.log(process.env.EthereumMainnet);
+    // const provider = new ethers.JsonRpcProvider(process.env.EthereumMainnet);
+
     const contract = new ethers.Contract(usdt_token_address, ERC20_ABI, provider);
     
     const decimals = await contract.decimals();
@@ -22,9 +26,9 @@ async function startListening(callback) {
     contract.on("Transfer", async (from, to, value, event) => {
         console.log(`📡 Transfer from ${from} to ${to} of ${value.toString()}`);
         const amount = ethers.formatUnits(value, decimals);
-        const tx_hash = event?.log?.transactionHash || "00000000";
+        const tx_hash = event?.log?.transactionHash || "0x00000000";
         const platform = await AdminSetting.findOne({ where: { title: 'platform_wallet_address' } })
-        const platform_address = platform?.value || '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e'
+        const platform_address = platform?.value || "0x0000000000000"  // '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e'
         console.log(platform_address);
         if(to === platform_address) await TxHash.create({ tx_hash, amount, created_at: new Date() })
         callback({
