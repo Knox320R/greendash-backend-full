@@ -15,7 +15,6 @@ async function startListening(callback) {
 
     const provider = new ethers.JsonRpcProvider(process.env.SEPOLIA_RPC_URL);
     // const provider = new ethers.JsonRpcProvider(process.env.BSC_MAINNET);
-    console.log(process.env.EthereumMainnet);
     // const provider = new ethers.JsonRpcProvider(process.env.EthereumMainnet);
 
     const contract = new ethers.Contract(usdt_token_address, ERC20_ABI, provider);
