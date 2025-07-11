@@ -313,6 +313,71 @@ const RejectWithdrawal = async (req, res) => {
   }
 }
 
+const dailyFinancial = async (req, res) => {
+  try {
+    const { start_date, end_date } = req.body;
+    
+    // Validate date inputs
+    if (!start_date || !end_date) return res.status(400).json({ success: false, message: 'Start date and end date are required'});
+
+    const startDate = new Date(start_date);
+    const endDate = new Date(end_date);
+    
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return res.status(400).json({success: false,message: 'Invalid date format'});
+
+    // Set end date to end of day
+    endDate.setUTCHours(23, 59, 59, 999);
+
+    // Fetch stakings between dates
+    const stakings = await Staking.findAll({
+      where: {created_at: {[Op.between]: [startDate, endDate]}},
+      include: [{ model: User, as: 'user', attributes: ['email', 'name'] },
+        { model: StakingPackage, as: 'package', attributes: ['name', 'stake_amount', 'daily_yield_percentage'] }],
+      order: [['created_at', 'DESC']]
+    });
+
+    // Fetch withdrawals between dates
+    const withdrawals = await Withdrawal.findAll({
+      where: { created_at: {[Op.between]: [startDate, endDate]}},
+      include: [{ model: User, as: 'user', attributes: ['email', 'name'] }],
+      order: [['created_at', 'DESC']]
+    });
+
+    // Fetch transactions between dates
+    const transactions = await Transaction.findAll({
+      where: {created_at: {[Op.between]: [startDate, endDate]}},
+      include: [{ model: User, as: 'user', attributes: ['email', 'name'] }],
+      order: [['created_at', 'DESC']]
+    });
+    
+    console.log(transactions);
+    res.json({
+      success: true,
+      data: {
+        period: {
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString()
+        },
+        transactions: transactions,
+        withdrawals: withdrawals,
+        stakings: stakings,
+        summary: {
+          total_transactions: transactions.length,
+          total_withdrawals: withdrawals.length,
+          total_stakings: stakings.length
+        }
+      }
+    });
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "Failed to get daily financial data"
+    });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   updateUser,
@@ -322,5 +387,6 @@ module.exports = {
   ApproveWithdrawal,
   RejectWithdrawal,
   deleteAdminSettings,
-  createAdminSettings
+  createAdminSettings,
+  dailyFinancial
 };

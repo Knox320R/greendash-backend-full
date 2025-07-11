@@ -161,17 +161,8 @@ const startStaking = async (req, res) => {
     await daily_pool.update({ value: new_pool })
 
     const newStaking = {
-      id: new_staking.id,
-      stake_amount: package.stake_amount,
-      status: new_staking.status,
-      start_date: new Date(),
-      now: new Date(),
-      package: {
-        id: package.id,
-        name: package.name,
-        daily_yield_percentage: package.daily_yield_percentage,
-        lock_period_days: package.lock_period_days
-      }
+      ...new_staking.dataValues,
+      package
     }
 
     return res.send({ success: true, message: "success to stake", newTransaction, newStaking })

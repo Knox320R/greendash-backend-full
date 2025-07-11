@@ -22,6 +22,6 @@ router.put('/users/:id', adminController.updateUser);
 
 router.post('/approve', adminController.ApproveWithdrawal);
 router.post('/reject', adminController.RejectWithdrawal);
-
+router.post('/daily-financial', adminController.dailyFinancial);
 
 module.exports = router; 
