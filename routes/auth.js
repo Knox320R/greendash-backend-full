@@ -55,5 +55,6 @@ router.post('/reset-password', authController.resetPassword);
 // // Protected routes
 // router.post('/connect-wallet', authenticateToken, walletValidation, authController.connectWallet);
 router.post('/logout', authenticateToken, authController.logout);
+router.get('/me', authenticateToken, authController.currentUser);
 
 module.exports = router; 

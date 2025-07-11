@@ -313,6 +313,29 @@ async function getDashboard(user_id) {
   }
 }
 
+const currentUser = async (req, res) => {
+  try {
+    const { id } = req.user
+    const user = await User.findByPk(id);
+    if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    if (!user.is_email_verified) return res.status(401).json({ success: false, message: 'You should pass the email verification.' });
+    if (!user.is_active) return res.status(401).json({ success: false, message: 'You are disabled' });
+
+    await user.update({ last_login: new Date() });
+    const now_user = {}
+    for(item of ['id', 'name', 'email', 'referral_code', 'is_admin', 'phone', 'wallet_address', 'egd_balance', 'withdrawals', 'referred_by', 'parent_leg', 'left_volume', 'right_volume', 'rank_goal']) now_user[item] = user[item]
+    now_user.created_at = getCreatedDate(user)
+    // Generate JWT token
+    const token = generateToken(user.id);
+    // Get user dashboard data
+    const user_base_data = await getDashboard(id);
+    return res.json({ success: true, message: 'Login successful', user: now_user, user_base_data, token });
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ success: false, message: 'Login failed' });
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -321,4 +344,5 @@ module.exports = {
   resetPassword,
   logout,
   getLandingData,
+  currentUser
 };
