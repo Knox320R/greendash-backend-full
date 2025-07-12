@@ -2,13 +2,23 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class AdminSetting extends Model {}
+  class AdminSetting extends Model { }
 
   AdminSetting.init({
     title: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.ENUM(
+        'platform_wallet_address',
+        'usdt_token_address',
+        'platform_fee',
+        'min_withdrawal',
+        'max_withdrawal',
+        'unilevel_commission_enable',
+        'rank_reward_enable',
+        'daily_bonus_time',
+        'platform_name'
+      ),
       allowNull: false,
-      defaultValue: 'token_price',
+      defaultValue: 'platform_wallet_address',
       unique: true
     },
     description: {

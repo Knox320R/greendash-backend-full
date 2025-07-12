@@ -3,7 +3,7 @@
 module.exports = (sequelize, DataTypes) => {
   const Transaction = sequelize.define('Transaction', {
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
     },
     type: {
@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     amount: {
-      type: DataTypes.DECIMAL(20, 8),
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
     },
     created_at: {

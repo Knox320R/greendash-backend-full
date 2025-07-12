@@ -7,20 +7,25 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER.UNSIGNED
       },
       title: {
-        type: Sequelize.ENUM('seed_sale', 'private_sale', 'public_sale', 'airdrop', 'liquidity', 'development', 'marketing & expansion', 'team & audits', 'staking & reserves', 'others'),
+        type: Sequelize.ENUM('seed_sale', 'private_sale', 'public_sale', 'airdrop', 'liquidity', 'development', 'marketing & expansion', 'team & audits', 'staking & reserves', 'total_staking_pool', 'daily_staking_pool', 'purchase_pool', 'other'),
         allowNull: false,
         defaultValue: 'seed_sale'
       },
       description: {
         type: Sequelize.TEXT,
       },
-      percent: {
-        type: Sequelize.FLOAT,
+      amount: {
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
+        defaultValue: 0,
         allowNull: false,
-        defaultValue: 2.0
+      },
+      price: {
+        type: Sequelize.FLOAT.UNSIGNED,
+        defaultValue: 0.01,
+        allowNull: true
       },
       created_at: {
         allowNull: false,

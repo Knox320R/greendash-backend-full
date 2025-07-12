@@ -36,7 +36,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     referred_by: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 1,
       references: {
@@ -48,7 +48,7 @@ module.exports = (sequelize, DataTypes) => {
       comment: 'Universal referral system - who referred this user'
     },
     rank_goal: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 1,
       references: {
@@ -65,13 +65,13 @@ module.exports = (sequelize, DataTypes) => {
       comment: 'Which leg of the parent this user is on'
     },
     left_volume: {
-      type: DataTypes.DECIMAL(20, 8),
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       defaultValue: 0,
       comment: 'Total volume in left leg'
     },
     right_volume: {
-      type: DataTypes.DECIMAL(20, 8),
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       defaultValue: 0,
       comment: 'Total volume in right leg'
@@ -95,12 +95,12 @@ module.exports = (sequelize, DataTypes) => {
       unique: true
     },
     egd_balance: {
-      type: DataTypes.DECIMAL(20, 8),
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       defaultValue: 0
     },
     withdrawals: {
-      type: DataTypes.DECIMAL(20, 8),
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       defaultValue: 0
     },

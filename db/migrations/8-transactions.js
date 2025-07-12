@@ -7,10 +7,10 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
           model: 'users',
@@ -34,7 +34,7 @@ module.exports = {
         comment: 'Source of the transaction'
       },
       amount: {
-        type: Sequelize.DECIMAL(20, 8),
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
         allowNull: false,
         comment: 'Amount of the transaction',
       },

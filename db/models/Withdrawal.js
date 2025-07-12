@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE'
     },
     amount: {
-      type: DataTypes.DECIMAL(20, 8),
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       comment: 'Withdrawal amount'
     },

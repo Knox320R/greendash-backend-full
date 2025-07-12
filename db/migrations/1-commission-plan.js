@@ -7,16 +7,16 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER.UNSIGNED
       },
       level: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         unique: true,
         comment: 'Referral level (1-9)'
       },
       commission_percent: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.FLOAT.UNSIGNED,
         allowNull: false,
         comment: 'Commission percentage for this level'
       },

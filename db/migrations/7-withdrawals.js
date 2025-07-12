@@ -7,10 +7,10 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER.UNSIGNED
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         references: {
           model: 'users',
@@ -20,7 +20,7 @@ module.exports = {
         onUpdate: 'CASCADE',
       },
       amount: {
-        type: Sequelize.DECIMAL(20, 8),
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
         allowNull: false,
         comment: 'Withdrawal amount'
       },

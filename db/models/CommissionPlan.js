@@ -6,12 +6,12 @@ module.exports = (sequelize, DataTypes) => {
 
   CommissionPlan.init({
     level: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       unique: true
     },
     commission_percent: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.FLOAT.UNSIGNED,
       allowNull: false,
       defaultValue: 0
     }

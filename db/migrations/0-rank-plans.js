@@ -7,7 +7,7 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER.UNSIGNED
       },
       rank: {
         type: Sequelize.STRING(250),
@@ -16,13 +16,13 @@ module.exports = {
         comment: 'Rank name, e.g. Bronze, Silver, Gold'
       },
       volume: {
-        type: Sequelize.DECIMAL(20, 2),
+        type: Sequelize.DECIMAL(20, 2).UNSIGNED,
         allowNull: false,
         defaultValue: 0,
         comment: 'Minimum weaker leg volume required'
       },
       bonus_amount: {
-        type: Sequelize.DECIMAL(20, 2),
+        type: Sequelize.DECIMAL(20, 2).UNSIGNED,
         allowNull: false,
         comment: 'Bonus amount = 5% of volume for that rank'
       },

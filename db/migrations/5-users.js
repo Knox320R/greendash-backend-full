@@ -7,7 +7,7 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER.UNSIGNED
       },
       email: {
         type: Sequelize.STRING(255),
@@ -24,7 +24,7 @@ module.exports = {
         allowNull: false
       },
       referred_by: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         defaultValue: 1,
         references: { model: 'users', key: 'id' },
@@ -37,12 +37,12 @@ module.exports = {
         defaultValue: 'left'
       },
       left_volume: {
-        type: Sequelize.DECIMAL(20, 8),
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
         allowNull: false,
         defaultValue: 0
       },
       right_volume: {
-        type: Sequelize.DECIMAL(20, 8),
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
         allowNull: false,
         defaultValue: 0
       },
@@ -64,12 +64,12 @@ module.exports = {
         allowNull: true
       },
       egd_balance: {
-        type: Sequelize.DECIMAL(20, 8),
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
         allowNull: false,
         defaultValue: 0
       },
       rank_goal: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         defaultValue: 1,
         references: {
@@ -80,7 +80,7 @@ module.exports = {
         onUpdate: 'CASCADE',
       },
       withdrawals: {
-        type: Sequelize.DECIMAL(20, 8),
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
         allowNull: false,
         defaultValue: 0
       },

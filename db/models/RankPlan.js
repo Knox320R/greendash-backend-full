@@ -11,12 +11,12 @@ module.exports = (sequelize, DataTypes) => {
       unique: true
     },
     bonus_amount: {
-      type: DataTypes.DECIMAL(20, 2),
+      type: DataTypes.DECIMAL(20, 2).UNSIGNED,
       allowNull: false,
       comment: 'Bonus amount = 5% of volume for that rank'
     },
     volume: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 0
     },

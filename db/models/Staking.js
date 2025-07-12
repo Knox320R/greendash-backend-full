@@ -11,12 +11,12 @@ module.exports = (sequelize, DataTypes) => {
 
   Staking.init({
     user_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: { model: 'users', key: 'id' },
     },
     package_id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       references: { model: 'staking_packages', key: 'id' },
       onUpdate: 'CASCADE',

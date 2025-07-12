@@ -18,17 +18,17 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT
     },
     stake_amount: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 1
     },
     daily_yield_percentage: {
-      type: DataTypes.FLOAT,
+      type: DataTypes.FLOAT.UNSIGNED,
       allowNull: false,
       defaultValue: 0
     },
     lock_period_days: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       allowNull: false,
       defaultValue: 365
     }

@@ -7,13 +7,22 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER.UNSIGNED
       },
       title: {
-        type: Sequelize.STRING(255),
+        type: Sequelize.ENUM(
+          'platform_wallet_address',
+          'usdt_token_address',
+          'platform_fee',
+          'min_withdrawal',
+          'max_withdrawal',
+          'unilevel_commission_enable',
+          'rank_reward_enable',
+          'daily_bonus_time',
+          'platform_name'
+        ),
         allowNull: false,
-        unique: true,
-        comment: 'Setting key, e.g. token_price'
+        unique: true
       },
       description: {
         type: Sequelize.STRING(255),

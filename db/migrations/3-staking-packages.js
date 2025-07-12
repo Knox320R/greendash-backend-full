@@ -7,7 +7,7 @@ module.exports = {
         allowNull: false,
         autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.INTEGER
+        type: Sequelize.INTEGER.UNSIGNED
       },
       name: {
         type: Sequelize.STRING(100),
@@ -18,17 +18,17 @@ module.exports = {
         type: Sequelize.TEXT
       },
       stake_amount: {
-        type: Sequelize.DECIMAL(20, 8),
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
         allowNull: false,
         comment: 'Fixed EGD token stake amount per package'
       },
       daily_yield_percentage: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.FLOAT.UNSIGNED,
         allowNull: false,
         comment: 'Daily yield rate in % e.g. 0.1 for 0.1%'
       },
       lock_period_days: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.INTEGER.UNSIGNED,
         allowNull: false,
         defaultValue: 365,
         comment: 'Lock-in period in days'

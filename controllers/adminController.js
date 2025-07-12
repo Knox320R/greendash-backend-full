@@ -383,7 +383,6 @@ module.exports = {
   updateUser,
   getTablePagenation,
   updateAdminSettings,
-  RejectWithdrawal,
   ApproveWithdrawal,
   RejectWithdrawal,
   deleteAdminSettings,

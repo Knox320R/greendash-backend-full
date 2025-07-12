@@ -1,5 +1,5 @@
 const { where } = require('sequelize');
-const { Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
+const { TotalTokens, Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
 const { getCreatedDate } = require('../utils/common');
 
@@ -127,43 +127,29 @@ const startStaking = async (req, res) => {
     const user = await User.findByPk(user_id)
     if (!user) return res.status(403).send({ success: false, message: "failed to find user" })
 
-    const token_price_setting = await AdminSetting.findOne({ where: { title: "token_price" } })
-    const token_price = parseFloat(token_price_setting.value)
-    const usdt_amount = parseFloat(package.stake_amount) * token_price
-    const unilevel_list = await CommissionPlan.findAll()
-    const unilevel_depth = await CommissionPlan.count()
+    const seed_token = await TotalTokens.findOne({ where: { title: "seed_sale" } })
+    const usdt_amount = parseFloat(package.stake_amount) * seed_token.price
 
-    await tx.destroy();
-    const newTransaction = await Transaction.create({ user_id, type: "staking", amount: package.stake_amount })
+    const unilevel_list = await CommissionPlan.findAll({ order: [['id', 'ASC']] })
+
+    await seed_token.increment('amount', { by: -package.stake_amount })
+    await TotalTokens.increment('amount', { by: package.stake_amount }, { where: {title: "daily_staking_pool"} })
     const new_staking = await Staking.create({ user_id, package_id, status: "active" })
-
-    const parent = await User.findByPk(user.referred_by)
-
-    if (user.parent_leg === "left") {
-      await parent.increment('left_volume', { by: usdt_amount })
-    } else if (user.parent_leg === "right") {
-      await parent.increment('right_volume', { by: usdt_amount })
-    }
+    const newTransaction = await Transaction.create({ user_id, type: "staking", amount: package.stake_amount })
+    await User.increment(user.parent_leg + '_volume', { by: usdt_amount }, { where: { id: user.referred_by } })
+    await tx.destroy();
 
     let ref = user.referred_by;
-    for (let i = 1; i <= unilevel_depth; i++) {
+    for(let unilevel of unilevel_list) {
       const referrer = await User.findByPk(ref)
-      const unilevel = unilevel_list.find(item => item.level === i)
-      const withdrawal_increment = usdt_amount * parseFloat(unilevel.commission_percent) / 100;
+      const withdrawal_increment = usdt_amount * unilevel.commission_percent / 100
       await referrer.increment('withdrawals', { by: withdrawal_increment })
-      await Transaction.create({ user_id: referrer.id, type: "unilevel_commission", amount: withdrawal_increment })
-      if (ref === 1) break
-      ref = referrer.referred_by;
+      await Transaction.create({ user_id: referrer.id, type: 'unilevel_commission', amount: withdrawal_increment })
+      if(ref === 1) break
+      ref = referrer.referred_by
     }
 
-    const daily_pool = await AdminSetting.findOne({ where: { title: "daily_pool" } })
-    const new_pool = parseFloat(daily_pool.value) + parseFloat(package.stake_amount)
-    await daily_pool.update({ value: new_pool })
-
-    const newStaking = {
-      ...new_staking.dataValues,
-      package
-    }
+    const newStaking = { ...new_staking.dataValues, package }
 
     return res.send({ success: true, message: "success to stake", newTransaction, newStaking })
 
@@ -175,19 +161,17 @@ const startStaking = async (req, res) => {
 
 const convertToUSDT = async (req, res) => {
   try {
-    const user_id = req.user.id
     const { amount } = req.body
+    const user = await User.findByPk(req.user.id)
 
-    const user = await User.findByPk(user_id)
     const egd_balance = Number(user.egd_balance)
     const withdrawals = parseFloat(user.withdrawals)
     if (amount > egd_balance) return res.status(403).send({ message: "Your requested amount is exceeding", success: true })
 
-    const token_price_setting = await AdminSetting.findOne({ where: { title: "token_price" } })
-    const token_price = parseFloat(token_price_setting.value)
+    const seed_token = await TotalTokens.findOne({ where: { title: "seed_sale" } }) || { price: 0.01 }
 
     const new_egd = egd_balance - amount
-    const new_withd = withdrawals + amount * token_price
+    const new_withd = withdrawals + amount * seed_token.price
     const newUser = await user.update({ egd_balance: new_egd, withdrawals: new_withd })
     res.send({ success: true, message: "success to exchange your token, EGD -> USDT", egd: newUser.egd_balance, withd: newUser.withdrawals })
 
@@ -239,6 +223,7 @@ const confirmUpdatedWithdrawl = async (req, res) => {
     res.status(500).send({ success: false, message: "failed to confirm a withdrawal" })
   }
 }
+
 module.exports = {
   getProfile,
   updateProfile,
