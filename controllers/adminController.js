@@ -284,10 +284,10 @@ const ApproveWithdrawal = async (req, res) => {
     const { id } = req.body
     const withdrawal = await Withdrawal.findByPk(id)
     const platform_fee_item = await AdminSetting.findOne({ where: { title: "platform_fee" } })
-    const platform_fee = parseFloat(platform_fee_item.value)
-    const amount = parseFloat(withdrawal.amount) * platform_fee / 100;
-    await Transaction.create({ user_id: withdrawal.user_id, type: 'withdrawal', amount })
+    const platform_fee = parseFloat(platform_fee_item.value) / 100
+    const amount = parseFloat(withdrawal.amount) * (1 - platform_fee);
     await withdrawal.update({ status: "approved" })
+    await Transaction.create({ user_id: withdrawal.user_id, type: 'withdrawal', amount })
     res.send({ success: true, message: "success to approve user withdrawal" })
   } catch (e) {
     console.log(e);
@@ -300,12 +300,7 @@ const RejectWithdrawal = async (req, res) => {
     const { id } = req.body
     const withdrawal = await Withdrawal.findByPk(id)
     await withdrawal.update({ status: "rejected" })
-
-    const user = await User.findByPk(withdrawal.user_id)
-    const refund = parseFloat(user.withdrawals) + parseFloat(withdrawal.amount)
-
-    await user.update({ withdrawals: refund })
-
+    await User.increment('withdrawals', { by: withdrawal.amount }, { where: { id: withdrawal.user_id } })
     return res.send({ success: true, message:" successfully refund to the user " })
   } catch (e) {
     console.log(e);
@@ -313,7 +308,7 @@ const RejectWithdrawal = async (req, res) => {
   }
 }
 
-const dailyFinancial = async (req, res) => {
+const financialStatistic = async (req, res) => {
   try {
     const { start_date, end_date } = req.body;
     
@@ -387,5 +382,5 @@ module.exports = {
   RejectWithdrawal,
   deleteAdminSettings,
   createAdminSettings,
-  dailyFinancial
+  financialStatistic
 };

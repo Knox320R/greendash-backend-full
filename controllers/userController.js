@@ -1,7 +1,5 @@
-const { where } = require('sequelize');
 const { TotalTokens, Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
-const { getCreatedDate } = require('../utils/common');
 
 // Get user profile
 const getProfile = async (req, res) => {
@@ -130,7 +128,7 @@ const startStaking = async (req, res) => {
     const seed_token = await TotalTokens.findOne({ where: { title: "seed_sale" } })
     const usdt_amount = parseFloat(package.stake_amount) * seed_token.price
 
-    const unilevel_list = await CommissionPlan.findAll({ order: [['id', 'ASC']] })
+    const unilevel_list = await CommissionPlan.findAll({ order: [['level', 'ASC']] })
 
     await seed_token.increment('amount', { by: -package.stake_amount })
     await TotalTokens.increment('amount', { by: package.stake_amount }, { where: {title: "daily_staking_pool"} })
@@ -204,16 +202,13 @@ const withdrawalRequest = async (req, res) => {
 
 const confirmUpdatedWithdrawl = async (req, res) => {
   try {
-    const { id } = req.user
-    console.log(id);
-    const rejectedWithdrawals = await Withdrawal.findAll({ where: { user_id: id, status: "rejected" } })
-    console.log(rejectedWithdrawals);
-    if (rejectedWithdrawals) {
-      for (const item of rejectedWithdrawals) await item.destroy()
-    }
+    const user_id = req.user.id
 
-    const approvedWithdrawals = await Withdrawal.findAll({ where: { user_id: id, status: "approved" } })
-    console.log(approvedWithdrawals);
+    const rejectedWithdrawals = await Withdrawal.findAll({ where: { user_id, status: "rejected" } })
+    if (rejectedWithdrawals) 
+      for (const item of rejectedWithdrawals) await item.destroy()
+    
+    const approvedWithdrawals = await Withdrawal.findAll({ where: { user_id, status: "approved" } })
     if (approvedWithdrawals)
       for (const item of approvedWithdrawals) await item.update({ status: "completed" })
 

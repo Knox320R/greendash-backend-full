@@ -23,8 +23,8 @@ async function startListening(callback) {
     const symbol = await contract.symbol();
   
     contract.on("Transfer", async (from, to, value, event) => {
-        console.log(`📡 Transfer from ${from} to ${to} of ${value.toString()}`);
         const amount = ethers.formatUnits(value, decimals);
+        console.log(`📡 Transfer from ${from} to ${to} of ${amount}`);
         const tx_hash = event?.log?.transactionHash || "0x00000000";
         const platform = await AdminSetting.findOne({ where: { title: 'platform_wallet_address' } })
         const platform_address = platform?.value || "0x0000000000000"  // '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e'
