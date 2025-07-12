@@ -2,13 +2,13 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class TotalToken extends Model { }
+  class TokenPool extends Model { }
 
-  TotalToken.init({
+  TokenPool.init({
     title: {
-      type: DataTypes.ENUM('seed_sale', 'private_sale', 'public_sale', 'airdrop', 'liquidity', 'development', 'marketing & expansion', 'team & audits', 'staking & reserves', 'other'),
+      type: DataTypes.ENUM('total_staking', 'daily_staking', 'platform_fee', 'purchase', 'other'),
       allowNull: false,
-      defaultValue: 'seed_sale'
+      defaultValue: 'total_staking'
     },
     description: {
       type: DataTypes.TEXT
@@ -24,11 +24,11 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     sequelize,
-    modelName: 'TotalToken',
-    tableName: 'total_tokens',
+    modelName: 'TokenPool',
+    tableName: 'token_pools',
     timestamps: true,
     underscored: true
   });
 
-  return TotalToken;
+  return TokenPool;
 };

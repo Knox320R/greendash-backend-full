@@ -10,7 +10,7 @@ module.exports = {
         type: Sequelize.INTEGER.UNSIGNED
       },
       title: {
-        type: Sequelize.ENUM('seed_sale', 'private_sale', 'public_sale', 'airdrop', 'liquidity', 'development', 'marketing & expansion', 'team & audits', 'staking & reserves', 'total_staking_pool', 'daily_staking_pool', 'purchase_pool', 'other'),
+        type: Sequelize.ENUM('seed_sale', 'private_sale', 'public_sale', 'airdrop', 'liquidity', 'development', 'marketing & expansion', 'team & audits', 'staking & reserves', 'other'),
         allowNull: false,
         defaultValue: 'seed_sale'
       },

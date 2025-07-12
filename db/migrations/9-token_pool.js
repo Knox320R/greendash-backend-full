@@ -2,7 +2,7 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.createTable('admin_settings', {
+    await queryInterface.createTable('token_pools', {
       id: {
         allowNull: false,
         autoIncrement: true,
@@ -10,29 +10,17 @@ module.exports = {
         type: Sequelize.INTEGER.UNSIGNED
       },
       title: {
-        type: Sequelize.ENUM(
-          'platform_wallet_address',
-          'usdt_token_address',
-          'platform_fee',
-          'min_withdrawal',
-          'max_withdrawal',
-          'unilevel_commission_enable',
-          'universal_cashback_enable',
-          'rank_reward_enable',
-          'daily_bonus_time',
-          'platform_name'
-        ),
+        type: Sequelize.ENUM('total_staking', 'daily_staking', 'platform_fee', 'purchase', 'other'),
         allowNull: false,
-        unique: true
+        defaultValue: 'total_staking'
       },
       description: {
-        type: Sequelize.STRING(255),
-        allowNull: true
+        type: Sequelize.TEXT,
       },
-      value: {
-        type: Sequelize.STRING(255),
+      amount: {
+        type: Sequelize.DECIMAL(20, 8).UNSIGNED,
+        defaultValue: 0,
         allowNull: false,
-        comment: 'Setting value'
       },
       created_at: {
         allowNull: false,
@@ -45,10 +33,9 @@ module.exports = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
     });
-
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.dropTable('admin_settings');
+    await queryInterface.dropTable('token_pools');
   }
-};
+}; 

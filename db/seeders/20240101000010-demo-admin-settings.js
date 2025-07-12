@@ -9,6 +9,7 @@ module.exports = {
       { title: 'min_withdrawal', description: 'Minimum withdrawal amount', value: '10'},
       { title: 'max_withdrawal', description: 'Maximum withdrawal amount', value: '1000'},
       { title: 'unilevel_commission_enable', description: 'Unilevel commission enabled', value: 'true'},
+      { title: 'universal_cashback_enable', description: 'Universal cashbakc enabled', value: 'true'},
       { title: 'rank_reward_enable', description: 'Pay in USDT or electric vehicle equivalent', value: 'true'},
       { title: 'daily_bonus_time', description: 'When this platform calculates all daily bonus for stakers.', value: '10:00'},
       { title: 'platform_name', description: 'Platform display name', value: 'GreenDash'}

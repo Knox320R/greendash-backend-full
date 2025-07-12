@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         'min_withdrawal',
         'max_withdrawal',
         'unilevel_commission_enable',
+        'universal_cashback_enable',
         'rank_reward_enable',
         'daily_bonus_time',
         'platform_name'

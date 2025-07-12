@@ -12,9 +12,6 @@ module.exports = {
       { title: 'marketing & expansion', description: 'Marketing and expansion', amount: 75000000},
       { title: 'team & audits', description: 'Team and audits', amount: 75000000},
       { title: 'staking & reserves', description: 'Staking and reserves', amount: 200000000},
-      { title: 'total_staking_pool', description: 'Total Staked amount', amount: 0},
-      { title: 'daily_staking_pool', description: 'Total Staked amount', amount: 0},
-      { title: 'purchase_pool', description: 'Total purchase amount', amount: 0},
       { title: 'other', description: 'other tokens amount', amount: 0},
     ]);
   },
