@@ -1,12 +1,7 @@
 require("dotenv").config();
 const { ethers } = require("ethers");
 const { TxHash, AdminSetting } = require("./db/models");
-
-const ERC20_ABI = [
-    'event Transfer(address indexed from, address indexed to, uint256 value)',
-    'function decimals() view returns (uint8)',
-    'function symbol() view returns (string)'
-];
+const ERC20_ABI = require('./contract/bep-20.json');
 
 async function startListening(callback) {
 
@@ -18,10 +13,11 @@ async function startListening(callback) {
     // const provider = new ethers.JsonRpcProvider(process.env.EthereumMainnet);
 
     const contract = new ethers.Contract(usdt_token_address, ERC20_ABI, provider);
-    
-    const decimals = await contract.decimals();
+    console.log(ERC20_ABI);
+
+    const decimals = await contract.decimals();        
     const symbol = await contract.symbol();
-  
+
     contract.on("Transfer", async (from, to, value, event) => {
         const amount = ethers.formatUnits(value, decimals);
         console.log(`📡 Transfer from ${from} to ${to} of ${amount}`);
@@ -29,7 +25,7 @@ async function startListening(callback) {
         const platform = await AdminSetting.findOne({ where: { title: 'platform_wallet_address' } })
         const platform_address = platform?.value || "0x0000000000000"  // '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e'
         console.log(platform_address);
-        if(to === platform_address) await TxHash.create({ tx_hash, amount, created_at: new Date() })
+        if (to === platform_address) await TxHash.create({ tx_hash, amount, created_at: new Date() })
         callback({
             from,
             to,
