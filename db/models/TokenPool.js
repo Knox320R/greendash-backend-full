@@ -17,10 +17,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       defaultValue: 0,
       allowNull: false,
-    },
-    price: {
-      type: DataTypes.FLOAT.UNSIGNED,
-      allowNull: true
     }
   }, {
     sequelize,

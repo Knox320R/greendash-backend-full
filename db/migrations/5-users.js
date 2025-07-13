@@ -52,7 +52,7 @@ module.exports = {
       is_active: {
         type: Sequelize.BOOLEAN,
         allowNull: false,
-        defaultValue: true
+        defaultValue: false
       },
       referral_code: {
         type: Sequelize.STRING(50),

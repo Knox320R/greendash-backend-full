@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
 
   TotalToken.init({
     title: {
-      type: DataTypes.ENUM('seed_sale', 'private_sale', 'public_sale', 'airdrop', 'liquidity', 'development', 'marketing & expansion', 'team & audits', 'staking & reserves', 'other'),
+      type: DataTypes.ENUM('seed_sale', 'private_sale', 'public_sale', 'airdrop', 'liquidity', 'development', 'marketing_expansion', 'team_audits', 'staking_reserves', 'other'),
       allowNull: false,
       defaultValue: 'seed_sale'
     },

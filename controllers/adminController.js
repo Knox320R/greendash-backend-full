@@ -1,4 +1,4 @@
-const { User, Staking, Transaction, Referral, AdminSetting, StakingPackage, RankPlan, CommissionPlan, TotalToken, Withdrawal } = require('../db/models');
+const { TokenPool, User, Staking, Transaction, AdminSetting, StakingPackage, RankPlan, CommissionPlan, TotalToken, Withdrawal } = require('../db/models');
 const { validationResult } = require('express-validator');
 const { Op, where } = require('sequelize');
 const moment = require('moment');
@@ -21,17 +21,17 @@ const getDashboardStats = async (req, res) => {
     });
     const totalStakedAmount = activeStakingsWithPackages.reduce((sum, staking) => { return sum + parseFloat(staking.package?.stake_amount || 0); }, 0);
     // Calculate total rewards paid from transactions
-    const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'staking' } });
+    const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'daily_reward' } });
 
     // Financial statistics - calculate from transactions
     const totalInvested = await Transaction.sum('amount', { where: { type: 'staking' } });
-    const totalEarned = await Transaction.sum('amount', { where: { type: { [Op.in]: ['staking', 'purchase']} } });
+    const totalEarned = await Transaction.sum('amount', { where: { type: { [Op.in]: ['daily_reward', 'unilevel_commission', 'weak_leg_bonus'] } } });
     const totalWithdrawn = await Transaction.sum('amount', { where: { type: 'withdrawal' } });
 
     // Transaction statistics
     const totalTransactions = await Transaction.count();
-    const withdrawalTransactions = await Transaction.count({ where: {type: "staking"} });
-    const stakingTransactions = await Transaction.count({ where: {type: "withdrawal"} });
+    const stakingTransactions = await Transaction.count({ where: { type: "staking" } });
+    const withdrawalTransactions = await Transaction.count({ where: { type: "withdrawal" } });
 
     // Withdrawal statistics
     const pendingWithdrawals = await Withdrawal.count({ where: { status: 'pending' } });
@@ -60,7 +60,7 @@ const getDashboardStats = async (req, res) => {
         transactions: {
           total: totalTransactions,
           staking: stakingTransactions,
-          withdrawals: withdrawalTransactions 
+          withdrawals: withdrawalTransactions
         },
         withdrawals: {
           pending: pendingWithdrawals,
@@ -81,6 +81,10 @@ const updateAdminSettings = async (req, res) => {
   try {
     const { table_name, data } = req.body
     const { id } = data
+    if (!id) {
+      return res.status(400).send({ success: false, message: "ID is required" })
+    }
+
     let row = undefined
     switch (table_name) {
       case "admin_settings": {
@@ -89,6 +93,10 @@ const updateAdminSettings = async (req, res) => {
       }
       case "staking_packages": {
         row = await StakingPackage.findByPk(id)
+        break
+      }
+      case "token_pools": {
+        row = await TokenPool.findByPk(id)
         break
       }
       case "rank_plans": {
@@ -103,19 +111,30 @@ const updateAdminSettings = async (req, res) => {
         row = await TotalToken.findByPk(id)
         break
       }
+      default: {
+        return res.status(400).send({ success: false, message: "Invalid table name" })
+      }
     }
+
+    if (!row) {
+      return res.status(404).send({ success: false, message: "Record not found" })
+    }
+
     await row.update(data)
     return res.send({ success: true, message: "successfully updated" })
   } catch (e) {
     console.log(e);
-    return res.status(500).send("failed to update setting data")
+    return res.status(500).send({ success: false, message: "failed to update setting data" })
   }
 }
 
 const deleteAdminSettings = async (req, res) => {
   try {
     const { table_name, id } = req.params
-    console.log(table_name, id);
+    if (!id) {
+      return res.status(400).send({ success: false, message: "ID is required" })
+    }
+
     let row = undefined
     switch (table_name) {
       case "admin_settings": {
@@ -138,19 +157,30 @@ const deleteAdminSettings = async (req, res) => {
         row = await TotalToken.findByPk(id)
         break
       }
+      default: {
+        return res.status(400).send({ success: false, message: "Invalid table name" })
+      }
     }
+
+    if (!row) {
+      return res.status(404).send({ success: false, message: "Record not found" })
+    }
+
     await row.destroy()
     return res.send({ success: true, message: "successfully deleted" })
   } catch (e) {
     console.log(e);
-    return res.status(500).send("failed to update setting data")
+    return res.status(500).send({ success: false, message: "failed to delete setting data" })
   }
 }
 
 const createAdminSettings = async (req, res) => {
   try {
     const { table_name, data } = req.body
-    console.log(table_name, data);
+    if (!data) {
+      return res.status(400).send({ success: false, message: "Data is required" })
+    }
+
     let model = undefined
     switch (table_name) {
       case "admin_settings": {
@@ -173,20 +203,25 @@ const createAdminSettings = async (req, res) => {
         model = await TotalToken.create(data)
         break
       }
+      default: {
+        return res.status(400).send({ success: false, message: "Invalid table name" })
+      }
     }
     return res.send({ success: true, message: "successfully created", newRow: model })
   } catch (e) {
     console.log(e);
-    return res.status(500).send("failed to update setting data")
+    return res.status(500).send({ success: false, message: "failed to create setting data" })
   }
 }
 
 const getTablePagenation = async (req, res) => {
   try {
-
     const { limit, offset, table_name } = req.body
 
-    console.log(req.body);
+    if (!limit || offset === null || !table_name) {
+      return res.status(400).send({ success: false, message: "limit, offset, and table_name are required" })
+    }
+
     let list = [];
     let isMore = false;
 
@@ -231,6 +266,9 @@ const getTablePagenation = async (req, res) => {
         });
         break
       }
+      default: {
+        return res.status(400).send({ success: false, message: "Invalid table name" })
+      }
     }
     isMore = !(list.length < limit)
     return res.send({ success: true, list, isMore })
@@ -247,7 +285,14 @@ const getTablePagenation = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { is_active, is_admin, is_email_verified, egd_balance, usdt_balance } = req.body;
+    const { is_active, is_admin, is_email_verified, egd_balance } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required'
+      });
+    }
 
     const user = await User.findByPk(id);
     if (!user) {
@@ -262,7 +307,6 @@ const updateUser = async (req, res) => {
     if (typeof is_admin === 'boolean') updated_ata.is_admin = is_admin;
     if (typeof is_email_verified === 'boolean') updated_ata.is_email_verified = is_email_verified;
     if (egd_balance !== undefined) updated_ata.egd_balance = egd_balance;
-    if (usdt_balance !== undefined) updated_ata.usdt_balance = usdt_balance;
 
     await user.update(updated_ata);
 
@@ -282,12 +326,33 @@ const updateUser = async (req, res) => {
 const ApproveWithdrawal = async (req, res) => {
   try {
     const { id } = req.body
+
+    if (!id) {
+      return res.status(400).send({ success: false, message: "Withdrawal ID is required" })
+    }
+
     const withdrawal = await Withdrawal.findByPk(id)
+
+    if (!withdrawal) {
+      return res.status(404).send({ success: false, message: "Withdrawal not found" })
+    }
+
     const platform_fee_item = await AdminSetting.findOne({ where: { title: "platform_fee" } })
+
+    if (!platform_fee_item) {
+      return res.status(500).send({ success: false, message: "Platform fee setting not found" })
+    }
+
     const platform_fee = parseFloat(platform_fee_item.value) / 100
     const amount = parseFloat(withdrawal.amount) * (1 - platform_fee);
+
     await withdrawal.update({ status: "approved" })
-    await Transaction.create({ user_id: withdrawal.user_id, type: 'withdrawal', amount })
+    await Transaction.create({
+      user_id: withdrawal.user_id,
+      type: 'withdrawal',
+      amount,
+      created_at: new Date()
+    })
     res.send({ success: true, message: "success to approve user withdrawal" })
   } catch (e) {
     console.log(e);
@@ -298,10 +363,20 @@ const ApproveWithdrawal = async (req, res) => {
 const RejectWithdrawal = async (req, res) => {
   try {
     const { id } = req.body
+
+    if (!id) {
+      return res.status(400).send({ success: false, message: "Withdrawal ID is required" })
+    }
+
     const withdrawal = await Withdrawal.findByPk(id)
+
+    if (!withdrawal) {
+      return res.status(404).send({ success: false, message: "Withdrawal not found" })
+    }
+
     await withdrawal.update({ status: "rejected" })
-    await User.increment('withdrawals', { by: withdrawal.amount }, { where: { id: withdrawal.user_id } })
-    return res.send({ success: true, message:" successfully refund to the user " })
+    await User.increment('withdrawals', { by: withdrawal.amount, where: { id: withdrawal.user_id } })
+    return res.send({ success: true, message: " successfully refund to the user " })
   } catch (e) {
     console.log(e);
     res.status(500).send({ success: false, message: "failed to reject withdrawal" })
@@ -311,41 +386,39 @@ const RejectWithdrawal = async (req, res) => {
 const financialStatistic = async (req, res) => {
   try {
     const { start_date, end_date } = req.body;
-    
+
     // Validate date inputs
-    if (!start_date || !end_date) return res.status(400).json({ success: false, message: 'Start date and end date are required'});
+    if (!start_date || !end_date) return res.status(400).json({ success: false, message: 'Start date and end date are required' });
 
     const startDate = new Date(start_date);
     const endDate = new Date(end_date);
-    
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return res.status(400).json({success: false,message: 'Invalid date format'});
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return res.status(400).json({ success: false, message: 'Invalid date format' });
 
     // Set end date to end of day
     endDate.setUTCHours(23, 59, 59, 999);
 
     // Fetch stakings between dates
     const stakings = await Staking.findAll({
-      where: {created_at: {[Op.between]: [startDate, endDate]}},
+      where: { created_at: { [Op.between]: [startDate, endDate] } },
       include: [{ model: User, as: 'user', attributes: ['email', 'name'] },
-        { model: StakingPackage, as: 'package', attributes: ['name', 'stake_amount', 'daily_yield_percentage'] }],
+      { model: StakingPackage, as: 'package', attributes: ['name', 'stake_amount', 'daily_yield_percentage'] }],
       order: [['created_at', 'DESC']]
     });
 
     // Fetch withdrawals between dates
     const withdrawals = await Withdrawal.findAll({
-      where: { created_at: {[Op.between]: [startDate, endDate]}},
+      where: { created_at: { [Op.between]: [startDate, endDate] } },
       include: [{ model: User, as: 'user', attributes: ['email', 'name'] }],
       order: [['created_at', 'DESC']]
     });
 
     // Fetch transactions between dates
     const transactions = await Transaction.findAll({
-      where: {created_at: {[Op.between]: [startDate, endDate]}},
+      where: { created_at: { [Op.between]: [startDate, endDate] } },
       include: [{ model: User, as: 'user', attributes: ['email', 'name'] }],
       order: [['created_at', 'DESC']]
     });
-    
-    console.log(transactions);
     res.json({
       success: true,
       data: {

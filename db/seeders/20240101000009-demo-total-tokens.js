@@ -9,9 +9,9 @@ module.exports = {
       { title: 'airdrop', description: 'Airdrop allocation', amount: 20000000},
       { title: 'liquidity', description: 'Liquidity pool', amount: 20000000},
       { title: 'development', description: 'Development fund', amount: 60000000},
-      { title: 'marketing & expansion', description: 'Marketing and expansion', amount: 75000000},
-      { title: 'team & audits', description: 'Team and audits', amount: 75000000},
-      { title: 'staking & reserves', description: 'Staking and reserves', amount: 200000000},
+      { title: 'marketing_expansion', description: 'Marketing and expansion', amount: 75000000},
+      { title: 'team_audits', description: 'Team and audits', amount: 75000000},
+      { title: 'staking_reserves', description: 'Staking and reserves', amount: 200000000},
       { title: 'other', description: 'other tokens amount', amount: 0},
     ]);
   },

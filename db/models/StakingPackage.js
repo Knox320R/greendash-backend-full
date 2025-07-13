@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT
     },
     stake_amount: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       defaultValue: 1
     },

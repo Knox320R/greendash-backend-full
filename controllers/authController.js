@@ -1,4 +1,4 @@
-const { TxHash, Withdrawal, User, Staking, Transaction, AdminSetting, StakingPackage, RankPlan, CommissionPlan, TotalToken } = require('../db/models');
+const { TxHash, TokenPool, Withdrawal, User, Staking, Transaction, AdminSetting, StakingPackage, RankPlan, CommissionPlan, TotalToken } = require('../db/models');
 const { generateToken } = require('../middleware/auth');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../utils/email');
 const { validateEmail, validateString } = require('../utils/validation');
@@ -26,24 +26,29 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'User with this email already exists' });
     }
 
-    // Generate unique referral code
+    // Generate unique referral code with protection against infinite loop
     let newReferralCode;
+    let attempts = 0;
+    const maxAttempts = 10;
     let codeExists = true;
-    while (codeExists) {
+    
+    while (codeExists && attempts < maxAttempts) {
       newReferralCode = crypto.randomBytes(4).toString('hex');
       codeExists = await User.findOne({ where: { referral_code: newReferralCode } });
+      attempts++;
+    }
+    
+    if (attempts >= maxAttempts) {
+      return res.status(500).json({ success: false, message: 'Failed to generate unique referral code' });
     }
 
     // Find referrer if referral code provided
     let referrerId = 1; // Default to admin (ID 1)
-    // let parentLeg = 'left'; // Default to left leg
 
     if (referral_code) {
       const referrer = await User.findOne({ where: { referral_code } });
       if (referrer) {
         referrerId = referrer.id;
-        // Determine which leg to place the new user
-        // parentLeg = referrer.getWeakerLeg();
       }
     }
 
@@ -69,7 +74,7 @@ const register = async (req, res) => {
 
     // Send verification email
     await sendVerificationEmail(user.email, verificationToken, `${process.env.FRONTEND_URL || 'https://greendash.io'}/register?ref=${user.referral_code}`);
-    return res.send("Please check your email inbox now!")
+    return res.json({ success: true, message: "Please check your email inbox now!" });
   } catch (error) {
     console.error('Registration error:', error);
     res.status(500).json({ success: false, message: 'Registration failed' });
@@ -92,22 +97,30 @@ const login = async (req, res) => {
     // Find user
     const user = await User.findOne({ where: { email }});
     if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    
     // Check email verified
     if (!user.is_email_verified) {
-      await sendVerificationEmail(user.email, user.email_verification_token, `${process.env.FRONTEND_URL}/register?ref=${user.referral_code}`);
+      if (user.email_verification_token) {
+        await sendVerificationEmail(user.email, user.email_verification_token, `${process.env.FRONTEND_URL}/register?ref=${user.referral_code}`);
+      }
       return res.status(401).json({ success: false, message: 'You should pass the email verification. We sent a new email verification token. Please check your email inbox now' });
     }
+    
     if (!user.is_active) return res.status(401).json({ success: false, message: 'You are disabled' });
+    
     // Check password
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    
     // Update last login
     await user.update({ last_login: new Date() });
     const now_user = {}
     for(item of ['id', 'name', 'email', 'referral_code', 'is_admin', 'phone', 'wallet_address', 'egd_balance', 'withdrawals', 'referred_by', 'parent_leg', 'left_volume', 'right_volume', 'rank_goal']) now_user[item] = user[item]
     now_user.created_at = getCreatedDate(user)
+    
     // Generate JWT token
     const token = generateToken(user.id);
+    
     // Get user dashboard data
     const user_base_data = await getDashboard(user.id);
     return res.json({ success: true, message: 'Login successful', user: now_user, user_base_data, token });
@@ -121,21 +134,29 @@ const login = async (req, res) => {
 const verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
+    
+    if (!token) {
+      return res.status(400).json({ success: false, message: 'Verification token is required' });
+    }
+    
     const user = await User.findOne({
       where: {
         email_verification_token: token,
         email_verification_expires: { [Op.gt]: new Date() }
       }
     });
+    
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid or expired verification token' });
     }
+    
     await user.update({
       is_active: true,
       is_email_verified: true,
       email_verification_token: null,
       email_verification_expires: null
     });
+    
     res.json({ success: true, message: 'Email verified successfully' });
   } catch (error) {
     console.error('Email verification error:', error);
@@ -147,6 +168,7 @@ const verifyEmail = async (req, res) => {
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    
     try {
       validateEmail(email, 'Email');
     } catch (err) {
@@ -178,6 +200,10 @@ const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
 
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'Token and password are required' });
+    }
+
     try {
       validateString(password, 'New Password', 3);
     } catch (err) {
@@ -190,6 +216,7 @@ const resetPassword = async (req, res) => {
         password_reset_expires: { [Op.gt]: new Date() }
       }
     });
+    
     if (!user) {
       return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
     }
@@ -211,7 +238,9 @@ const logout = async (req, res) => {
   try {
     // Update last login for tracking
     const user = await User.findByPk(req.user.id);
-    await user.update({ last_login: new Date() });
+    if (user) {
+      await user.update({ last_login: new Date() });
+    }
 
     res.json({
       success: true,
@@ -228,12 +257,13 @@ const logout = async (req, res) => {
 
 const getLandingData = async (req, res) => {
   try {
-    const [admin_settings, staking_packages, rank_plans, commission_plans, total_tokens] = await Promise.all([
+    const [admin_settings, staking_packages, rank_plans, commission_plans, total_tokens, token_pools] = await Promise.all([
       AdminSetting.findAll(),
       StakingPackage.findAll(),
       RankPlan.findAll(),
       CommissionPlan.findAll(),
-      TotalToken.findAll()
+      TotalToken.findAll(),
+      TokenPool.findAll()
     ]);
 
     res.json({
@@ -243,7 +273,8 @@ const getLandingData = async (req, res) => {
         staking_packages,
         rank_plans,
         commission_plans,
-        total_tokens
+        total_tokens,
+        token_pools
       }
     });
   } catch (error) {
@@ -297,8 +328,7 @@ async function getDashboard(user_id) {
     // Get active stakings with package details
     const recent_Stakings = await Staking.findAll({ where: { user_id }, include: [{ model: StakingPackage, as: 'package' }], order: [['created_at', 'DESC']], limit: 100 });
     const recent_transactions = await Transaction.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 });
-    const recent_withdrawals = await Withdrawal.findAll({ where: { user_id, status: { [Op.in]: ['rejected', 'approved'] }  }, order: [['created_at', 'DESC']], limit: 100 })
-    // Clean up arrays (remove undefined entries)
+    const recent_withdrawals = await Withdrawal.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 })
 
     return {
       upline_users,

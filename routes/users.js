@@ -35,5 +35,6 @@ router.post('/staking', userController.startStaking);
 router.post('/exchange', userController.convertToUSDT);
 router.post('/withdraw', userController.withdrawalRequest);
 router.post('/confirm-withdrawal', userController.confirmUpdatedWithdrawl);
+router.post('/universal-cashback', userController.universalCashback);
 
 module.exports = router; 

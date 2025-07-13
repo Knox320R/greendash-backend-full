@@ -16,7 +16,7 @@ module.exports = (sequelize, DataTypes) => {
       comment: 'Bonus amount = 5% of volume for that rank'
     },
     volume: {
-      type: DataTypes.INTEGER.UNSIGNED,
+      type: DataTypes.DECIMAL(20, 2).UNSIGNED,
       allowNull: false,
       defaultValue: 0
     },

@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
   class Staking extends Model {
     static associate(models) {
       Staking.belongsTo(models.User, { foreignKey: 'user_id', as: 'user' });
-      Staking.belongsTo(models.StakingPackage, { foreignKey: 'package_id', as: 'package' });
+      Staking.belongsTo(models.StakingPackage, { foreignKey: 'package_id', as: 'package', onDelete: 'CASCADE' });
     }
   }
 

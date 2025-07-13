@@ -1,17 +1,26 @@
-require("dotenv").config();
+require('dotenv').config();
 const cron = require('node-cron');
 const { Op } = require('sequelize');
 const { User, Staking, StakingPackage, Transaction, AdminSetting, TotalToken, TokenPool } = require('./db/models');
 const fs = require('fs');
 
-// Main function to calculate and distribute the daily bonus (staking rewards only)
+/**
+ * Main function to calculate and distribute the daily staking bonus (rewards)
+ */
 async function calculateAndDistributeBonus() {
     try {
         // 1. Fetch daily and total staking pools from TokenPool
         const dailyPoolToken = await TokenPool.findOne({ where: { title: 'daily_staking' } });
         const totalPoolToken = await TokenPool.findOne({ where: { title: 'total_staking' } });
-        let dailyPool = dailyPoolToken ? parseFloat(dailyPoolToken.amount) : 0;
-        let totalStakingPool = totalPoolToken ? parseFloat(totalPoolToken.amount) : 0;
+
+        // Check if pools exist
+        if (!dailyPoolToken || !totalPoolToken) {
+            console.log('❌ Required token pools not found. Skipping daily bonus.');
+            return;
+        }
+
+        let dailyPool = parseFloat(dailyPoolToken.amount) || 0;
+        let totalStakingPool = parseFloat(totalPoolToken.amount) || 0;
 
         // If no new staking today, skip bonus distribution
         if (dailyPool <= 0) {
@@ -33,20 +42,21 @@ async function calculateAndDistributeBonus() {
             }]
         });
 
+        // Calculate each user's total staked and daily yield
         const userStakingInfo = stakers.map(user => {
             let userTotalStaked = 0;
             let userDailyYield = 0;
             user.stakings.forEach(staking => {
                 const pkg = staking.package;
                 if (pkg) {
-                    userTotalStaked += parseFloat(pkg.stake_amount);
-                    userDailyYield += parseFloat(pkg.stake_amount) * (parseFloat(pkg.daily_yield_percentage) / 100);
+                    userTotalStaked += parseFloat(pkg.stake_amount) || 0;
+                    userDailyYield += (parseFloat(pkg.stake_amount) || 0) * ((parseFloat(pkg.daily_yield_percentage) || 0) / 100);
                 }
             });
             return { user, userTotalStaked, userDailyYield };
         });
 
-        // Write stakers info to report.json
+        // Write stakers info to report.json for transparency/debugging
         try {
             fs.writeFileSync('report.json', JSON.stringify(userStakingInfo, null, 2), 'utf8');
             console.log('✅ Stakers info written to report.json');
@@ -60,11 +70,17 @@ async function calculateAndDistributeBonus() {
             if (info.userDailyYield > 0) {
                 total_daily_rewards += info.userDailyYield;
                 await info.user.increment('egd_balance', { by: info.userDailyYield });
-                await Transaction.create({ user_id: info.user.id, type: 'daily_reward', amount: info.userDailyYield });
+                await Transaction.create({
+                    user_id: info.user.id,
+                    type: 'daily_reward',
+                    amount: info.userDailyYield,
+                    created_at: new Date()
+                });
             }
         }
+
         // Deduct rewards from 'staking & reserves' in TotalToken
-        await TotalToken.increment('amount', { by: -total_daily_rewards }, { where: { title: "staking & reserves" } });
+        await TotalToken.increment('amount', { by: -total_daily_rewards, where: { title: 'staking_reserves' } });
 
         // 5. Update the pools in TokenPool
         await totalPoolToken.update({ amount: newTotalStakingPool });
@@ -76,19 +92,39 @@ async function calculateAndDistributeBonus() {
     }
 }
 
-// Scheduler initialization
+/**
+ * Scheduler initialization
+ * This function sets up the cron job to run the daily bonus at the configured time
+ */
 module.exports = async () => {
     try {
         // Fetch the scheduled time for the daily bonus from admin_settings
         const dailyBonusTimeSetting = await AdminSetting.findOne({ where: { title: 'daily_bonus_time' } });
-        const timeStr = dailyBonusTimeSetting ? dailyBonusTimeSetting.value : '0:0';
+
+        if (!dailyBonusTimeSetting) {
+            console.error('❌ daily_bonus_time setting not found in admin_settings.');
+            return;
+        }
+
+        const timeStr = dailyBonusTimeSetting.value;
         const [hour, minute] = timeStr.split(':').map(Number);
+
+        // Validate time format
+        if (isNaN(hour) || isNaN(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            console.error('❌ Invalid time format in daily_bonus_time setting:', timeStr);
+            return;
+        }
+
         const cronTime = `${minute} ${hour} * * *`;
         if (!cron.validate(cronTime)) {
             console.error('❌ Invalid cron expression:', cronTime);
             return;
         }
+
+        // Run initial calculation immediately on startup
         await calculateAndDistributeBonus();
+
+        // Schedule the daily job
         const job = cron.schedule(cronTime, async () => {
             console.log('🎯 Daily bonus job triggered at', new Date().toISOString());
             try {
@@ -98,11 +134,12 @@ module.exports = async () => {
             }
         }, {
             scheduled: true,
-            timezone: "UTC"
+            timezone: 'UTC'
         });
+
         console.log(`⏰ Daily bonus scheduler initialized (runs daily at ${timeStr} UTC)`);
         return job;
     } catch (error) {
         console.error('❌ Error initializing daily bonus scheduler:', error);
     }
-}
+};

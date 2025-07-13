@@ -3,7 +3,7 @@ const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 const { startListening } = require("./chainListener");
-const startDailyBonusScheduler = require('./daily_bonus');
+const daily_bonus = require('./daily_bonus');
 
 const { sequelize } = require('./config/database');
 const routes = require('./routes');
@@ -78,13 +78,15 @@ async function startServer() {
     // Start the daily bonus scheduler
     console.log('🔄 Starting daily bonus scheduler...');
     try {
-      await startDailyBonusScheduler();
+      daily_bonus();
       console.log('✅ Daily bonus scheduler started successfully');
     } catch (error) {
       console.error('❌ Error starting daily bonus scheduler:', error);
       console.error('Error stack:', error.stack);
     }
+    
     app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
       console.log(`⏰ Server started at: ${new Date().toISOString()}`);
     });
   } catch (error) {
