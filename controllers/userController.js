@@ -1,3 +1,4 @@
+const { where } = require('sequelize');
 const { TokenPool, TotalToken, Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
 require('dotenv').config();
@@ -245,6 +246,8 @@ const universalCashback = async (req, res) => {
     }
 
     // 4. Set the platform_fee pool to 0
+    const restFeePoolAfterDistribution = feePool-totalDistributed
+    await TokenPool.increment('amount', { by: restFeePoolAfterDistribution, where: { title: 'total_staking' } })
     await feePoolToken.update({ amount: 0 });
 
     return res.json({
