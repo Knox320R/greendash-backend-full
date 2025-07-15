@@ -28,16 +28,18 @@ const limiter = rateLimit({
 
 
 app.use(limiter);
-// CORS configuration
-// app.use(cors());
+
+const allowedOrigins = ['https://greendash.io', 'https://www.greendash.io', 'http://localhost:3000'];
+
 app.use(cors({
-  // origin: process.env.NODE_ENV === 'production' 
-  //   ? ['https://greendash.io', 'https://www.greendash.io']
-  //   : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173'],
-  // credentials: true,
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: false  // since you said no cookies/sessions, you can set this to false or omit
 }));
+
+// Still keep this for OPTIONS preflight (optional if you want explicit handling)
+// app.options('*', cors());
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -63,7 +65,7 @@ async function startServer() {
   try {
     await sequelize.authenticate();
     console.log('✅ Database connection established successfully.');
-    
+
     // Sync database (in development) - use safe sync
     if (process.env.NODE_ENV === 'development') {
       try {
@@ -74,7 +76,7 @@ async function startServer() {
         console.log('Error details:', syncError.message);
       }
     }
-    
+
     // Start the daily bonus scheduler
     console.log('🔄 Starting daily bonus scheduler...');
     try {
@@ -84,7 +86,7 @@ async function startServer() {
       console.error('❌ Error starting daily bonus scheduler:', error);
       console.error('Error stack:', error.stack);
     }
-    
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
       console.log(`⏰ Server started at: ${new Date().toISOString()}`);

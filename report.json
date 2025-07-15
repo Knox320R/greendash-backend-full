@@ -3,7 +3,7 @@
     "user": {
       "id": 1,
       "email": "admin@greendash.io",
-      "password": "$2b$10$XPPgEQpqVecoPhOZvUxuiO97k4nZqnZGj1oBObaUgiQLInbuviWKC",
+      "password": "$2b$10$f8sxagWpauXsr1kABkn5W.iXnWY0FAimOSqvtODJhXJIwh8hBTrU.",
       "name": "System Administrator",
       "referred_by": 1,
       "rank_goal": 1,
@@ -14,25 +14,25 @@
       "is_active": true,
       "wallet_address": "0x230d69A23822B4B40C0F06f5d9c8FC2Bd0024Eee",
       "referral_code": "ADMIN001",
-      "egd_balance": 10000,
+      "egd_balance": 10010,
       "withdrawals": 100,
       "is_admin": true,
-      "last_login": "2025-07-13T21:00:03.000Z",
+      "last_login": "2025-07-14T18:38:55.000Z",
       "is_email_verified": true,
       "email_verification_token": null,
       "email_verification_expires": null,
       "password_reset_token": null,
       "password_reset_expires": null,
       "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2025-07-14T18:38:55.000Z",
       "stakings": [
         {
           "id": 1,
           "user_id": 1,
           "package_id": 1,
           "status": "active",
-          "createdAt": "2025-04-04T21:00:04.000Z",
-          "updatedAt": "2025-04-04T21:00:04.000Z",
+          "createdAt": "2025-04-05T16:43:57.000Z",
+          "updatedAt": "2025-04-05T16:43:57.000Z",
           "package": {
             "id": 1,
             "name": "Daily Ride",
@@ -40,8 +40,8 @@
             "stake_amount": "10000.00000000",
             "daily_yield_percentage": 0.1,
             "lock_period_days": 365,
-            "createdAt": "2025-07-13T21:00:04.000Z",
-            "updatedAt": "2025-07-13T21:00:04.000Z"
+            "createdAt": "2025-07-14T16:43:57.000Z",
+            "updatedAt": "2025-07-14T16:43:57.000Z"
           }
         }
       ]
@@ -53,7 +53,7 @@
     "user": {
       "id": 2,
       "email": "sponsor@greendash.io",
-      "password": "$2b$10$9zqIHXYbT8lLUp2tVLvdw.48ZkXxYfCUYkxmLzdhokHYAhDB4nJ8e",
+      "password": "$2b$10$oo6ApqsHdfRW8/XuNycNhOJetz49X3tIonBtpUI4DtisgMVZ1SYDu",
       "name": "John Sponsor",
       "referred_by": 1,
       "rank_goal": 1,
@@ -64,25 +64,25 @@
       "is_active": true,
       "wallet_address": "0x6e48237e80565004F729D18b7B95b5f12514D429",
       "referral_code": "SPONSOR002",
-      "egd_balance": 5000,
+      "egd_balance": 7100,
       "withdrawals": 50,
       "is_admin": false,
-      "last_login": "2025-07-12T21:00:03.000Z",
+      "last_login": "2025-07-14T18:55:29.000Z",
       "is_email_verified": true,
       "email_verification_token": null,
       "email_verification_expires": null,
       "password_reset_token": null,
       "password_reset_expires": null,
       "createdAt": "2024-01-02T00:00:00.000Z",
-      "updatedAt": "2024-01-02T00:00:00.000Z",
+      "updatedAt": "2025-07-14T18:55:29.000Z",
       "stakings": [
         {
           "id": 2,
           "user_id": 2,
           "package_id": 2,
           "status": "active",
-          "createdAt": "2025-05-17T00:06:44.000Z",
-          "updatedAt": "2025-05-17T00:06:44.000Z",
+          "createdAt": "2025-05-17T19:50:37.000Z",
+          "updatedAt": "2025-05-17T19:50:37.000Z",
           "package": {
             "id": 2,
             "name": "Weekly Pass",
@@ -90,8 +90,8 @@
             "stake_amount": "50000.00000000",
             "daily_yield_percentage": 0.2,
             "lock_period_days": 365,
-            "createdAt": "2025-07-13T21:00:04.000Z",
-            "updatedAt": "2025-07-13T21:00:04.000Z"
+            "createdAt": "2025-07-14T16:43:57.000Z",
+            "updatedAt": "2025-07-14T16:43:57.000Z"
           }
         },
         {
@@ -99,8 +99,8 @@
           "user_id": 2,
           "package_id": 4,
           "status": "active",
-          "createdAt": "2025-05-28T13:53:24.000Z",
-          "updatedAt": "2025-05-28T13:53:24.000Z",
+          "createdAt": "2025-05-29T09:37:17.000Z",
+          "updatedAt": "2025-05-29T09:37:17.000Z",
           "package": {
             "id": 4,
             "name": "Business Fleet",
@@ -108,8 +108,8 @@
             "stake_amount": "500000.00000000",
             "daily_yield_percentage": 0.4,
             "lock_period_days": 365,
-            "createdAt": "2025-07-13T21:00:04.000Z",
-            "updatedAt": "2025-07-13T21:00:04.000Z"
+            "createdAt": "2025-07-14T16:43:57.000Z",
+            "updatedAt": "2025-07-14T16:43:57.000Z"
           }
         }
       ]
@@ -121,7 +121,7 @@
     "user": {
       "id": 4,
       "email": "bob.jones@example.com",
-      "password": "$2b$10$yKpBbYnuTRcfxY6PzM/Q6OZi7C0rNnyhBmfeWbfCWlRS8FUMW84O.",
+      "password": "$2b$10$eO7PFrqEp2LvOs3MId1P9es5e2beqF4TZUTVbnCD7DjOMH85z063a",
       "name": "Bob Jones",
       "referred_by": 3,
       "rank_goal": 1,
@@ -132,25 +132,25 @@
       "is_active": true,
       "wallet_address": "0xdAB2d05b29843098cbD18f1B2caDaad9Ed389fDa",
       "referral_code": "BOB004",
-      "egd_balance": 800.25,
+      "egd_balance": 30800.25,
       "withdrawals": 50,
       "is_admin": false,
-      "last_login": "2025-07-10T21:00:03.000Z",
+      "last_login": "2025-07-11T16:43:56.000Z",
       "is_email_verified": true,
       "email_verification_token": null,
       "email_verification_expires": null,
       "password_reset_token": null,
       "password_reset_expires": null,
       "createdAt": "2024-01-04T00:00:00.000Z",
-      "updatedAt": "2024-01-04T00:00:00.000Z",
+      "updatedAt": "2025-07-14T16:44:55.000Z",
       "stakings": [
         {
           "id": 6,
           "user_id": 4,
           "package_id": 6,
           "status": "active",
-          "createdAt": "2025-04-23T20:33:24.000Z",
-          "updatedAt": "2025-04-23T20:33:24.000Z",
+          "createdAt": "2025-04-24T16:17:17.000Z",
+          "updatedAt": "2025-04-24T16:17:17.000Z",
           "package": {
             "id": 6,
             "name": "Luxury Fleet",
@@ -158,8 +158,8 @@
             "stake_amount": "5000000.00000000",
             "daily_yield_percentage": 0.6,
             "lock_period_days": 365,
-            "createdAt": "2025-07-13T21:00:04.000Z",
-            "updatedAt": "2025-07-13T21:00:04.000Z"
+            "createdAt": "2025-07-14T16:43:57.000Z",
+            "updatedAt": "2025-07-14T16:43:57.000Z"
           }
         }
       ]
@@ -171,7 +171,7 @@
     "user": {
       "id": 7,
       "email": "eva.martin@example.com",
-      "password": "$2b$10$fl1SJJ/H9itYZMMiCNSHEuKhMRIwS4r8Nw6/ldmhhEuULlU/ofyxK",
+      "password": "$2b$10$v1rhMbvrQ1Qa9J6ku8YW.ORUlXWfHQbEGRiJIV.p2DB4S3IpZF3Q2",
       "name": "Eva Martin",
       "referred_by": 6,
       "rank_goal": 1,
@@ -182,25 +182,25 @@
       "is_active": true,
       "wallet_address": "0x00beE0e5D09CA2E16b6692680E40044C8181f8A3",
       "referral_code": "EVA007",
-      "egd_balance": 1500,
+      "egd_balance": 71500,
       "withdrawals": 120,
       "is_admin": false,
-      "last_login": "2025-07-07T21:00:04.000Z",
+      "last_login": "2025-07-08T16:43:56.000Z",
       "is_email_verified": true,
       "email_verification_token": null,
       "email_verification_expires": null,
       "password_reset_token": null,
       "password_reset_expires": null,
       "createdAt": "2024-01-07T00:00:00.000Z",
-      "updatedAt": "2024-01-07T00:00:00.000Z",
+      "updatedAt": "2025-07-14T16:44:55.000Z",
       "stakings": [
         {
           "id": 7,
           "user_id": 7,
           "package_id": 7,
           "status": "active",
-          "createdAt": "2025-03-20T03:13:24.000Z",
-          "updatedAt": "2025-03-20T03:13:24.000Z",
+          "createdAt": "2025-03-20T22:57:17.000Z",
+          "updatedAt": "2025-03-20T22:57:17.000Z",
           "package": {
             "id": 7,
             "name": "Corporate Mobility Hub",
@@ -208,8 +208,8 @@
             "stake_amount": "10000000.00000000",
             "daily_yield_percentage": 0.7,
             "lock_period_days": 365,
-            "createdAt": "2025-07-13T21:00:04.000Z",
-            "updatedAt": "2025-07-13T21:00:04.000Z"
+            "createdAt": "2025-07-14T16:43:57.000Z",
+            "updatedAt": "2025-07-14T16:43:57.000Z"
           }
         }
       ]
@@ -221,7 +221,7 @@
     "user": {
       "id": 6,
       "email": "daniel.kim@example.com",
-      "password": "$2b$10$MaLf8Nv0VdRcbMpVZDhMF.lfiy/32vavjyYDwrAHLZjoQUL4yqOC2",
+      "password": "$2b$10$69eko4lNijCENQ4/CBUX7.govKCBUPuIWZDlx16d5xFLC.sSOPJPy",
       "name": "Daniel Kim",
       "referred_by": 2,
       "rank_goal": 1,
@@ -232,25 +232,25 @@
       "is_active": true,
       "wallet_address": "0x00beE0e5D09CA2E16b6692680E40044C8181f8A3",
       "referral_code": "DANIEL006",
-      "egd_balance": 2500.75,
+      "egd_balance": 2600.75,
       "withdrawals": 200,
       "is_admin": false,
-      "last_login": "2025-07-08T21:00:03.000Z",
+      "last_login": "2025-07-09T16:43:56.000Z",
       "is_email_verified": true,
       "email_verification_token": null,
       "email_verification_expires": null,
       "password_reset_token": null,
       "password_reset_expires": null,
       "createdAt": "2024-01-06T00:00:00.000Z",
-      "updatedAt": "2024-01-06T00:00:00.000Z",
+      "updatedAt": "2025-07-14T16:44:55.000Z",
       "stakings": [
         {
           "id": 9,
           "user_id": 6,
           "package_id": 2,
           "status": "active",
-          "createdAt": "2025-03-31T17:00:04.000Z",
-          "updatedAt": "2025-03-31T17:00:04.000Z",
+          "createdAt": "2025-04-01T12:43:57.000Z",
+          "updatedAt": "2025-04-01T12:43:57.000Z",
           "package": {
             "id": 2,
             "name": "Weekly Pass",
@@ -258,8 +258,8 @@
             "stake_amount": "50000.00000000",
             "daily_yield_percentage": 0.2,
             "lock_period_days": 365,
-            "createdAt": "2025-07-13T21:00:04.000Z",
-            "updatedAt": "2025-07-13T21:00:04.000Z"
+            "createdAt": "2025-07-14T16:43:57.000Z",
+            "updatedAt": "2025-07-14T16:43:57.000Z"
           }
         }
       ]

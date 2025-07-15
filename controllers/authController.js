@@ -309,7 +309,7 @@ async function getDashboard(user_id) {
       let level = 1;
       const uplines = [];
 
-      while (level <= maxLevel) {
+      while (level <= 1) {
         // Find the user who referred this user
         const currentUser = await User.findByPk(currentUserId);
         if (!currentUser || !currentUser.referred_by || currentUser.referred_by === 1) break; // Stop at admin
