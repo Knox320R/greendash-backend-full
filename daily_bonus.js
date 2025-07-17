@@ -13,24 +13,28 @@ async function calculateAndDistributeBonus() {
         const dailyPoolToken = await TokenPool.findOne({ where: { title: 'daily_staking' } });
         const totalPoolToken = await TokenPool.findOne({ where: { title: 'total_staking' } });
 
-        // Check if pools exist
-        if (!dailyPoolToken || !totalPoolToken) {
-            console.log('❌ Required token pools not found. Skipping daily bonus.');
-            return;
-        }
+        // // Check if pools exist
+        // if (!dailyPoolToken || !totalPoolToken) {
+        //     console.log('❌ Required token pools not found. Skipping daily bonus.');
+        //     return;
+        // }
+
+        // // If no new staking today, skip bonus distribution
+        // if (dailyPool <= 0) {
+        //     console.log('No new staking today. Skipping daily bonus.');
+        //     return;
+        // }
 
         let dailyPool = parseFloat(dailyPoolToken.amount) || 0;
         let totalStakingPool = parseFloat(totalPoolToken.amount) || 0;
 
-        // If no new staking today, skip bonus distribution
-        if (dailyPool <= 0) {
-            console.log('No new staking today. Skipping daily bonus.');
-            return;
-        }
-
-        // 2. Move all daily pool to total staking pool
         const newTotalStakingPool = totalStakingPool + dailyPool;
 
+        // 5. Update the pools in TokenPool
+        await totalPoolToken.update({ amount: newTotalStakingPool });
+        await dailyPoolToken.update({ amount: 0 });
+
+        // 2. Move all daily pool to total staking pool
         // 3. Fetch all users with active staking and calculate their total staked EGD and daily yield
         const stakers = await User.findAll({
             include: [{
@@ -81,10 +85,6 @@ async function calculateAndDistributeBonus() {
 
         // Deduct rewards from 'staking & reserves' in TotalToken
         await TotalToken.increment('amount', { by: -total_daily_rewards, where: { title: 'staking_reserves' } });
-
-        // 5. Update the pools in TokenPool
-        await totalPoolToken.update({ amount: newTotalStakingPool });
-        await dailyPoolToken.update({ amount: 0 });
 
         console.log(`✅ Daily staking rewards distributed to ${stakers.length} stakers. ${dailyPool} EGD moved to total_staking. Daily yields credited.`);
     } catch (err) {
