@@ -28,6 +28,7 @@ module.exports = {
           'unilevel_commission',
           'universal_cashback',
           'weak_leg_bonus',
+          'admin_staking',
           'admin_adjustment'
         ),
         allowNull: false,

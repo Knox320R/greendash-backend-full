@@ -40,7 +40,7 @@ async function calculateAndDistributeBonus() {
             include: [{
                 model: Staking,
                 as: 'stakings',
-                where: { status: 'active' },
+                where: { status: { [Op.in]: ['active', 'admin_staking']} },
                 required: true,
                 include: [{ model: StakingPackage, as: 'package' }]
             }]
@@ -61,12 +61,12 @@ async function calculateAndDistributeBonus() {
         });
 
         // Write stakers info to report.json for transparency/debugging
-        try {
-            fs.writeFileSync('report.json', JSON.stringify(userStakingInfo, null, 2), 'utf8');
-            console.log('✅ Stakers info written to report.json');
-        } catch (err) {
-            console.error('❌ Failed to write report.json:', err);
-        }
+        // try {
+        //     fs.writeFileSync('report.json', JSON.stringify(userStakingInfo, null, 2), 'utf8');
+        //     console.log('✅ Stakers info written to report.json');
+        // } catch (err) {
+        //     console.error('❌ Failed to write report.json:', err);
+        // }
 
         // 4. Credit daily yield from staking packages to each user
         let total_daily_rewards = 0;
@@ -122,7 +122,7 @@ module.exports = async () => {
         }
 
         // Run initial calculation immediately on startup
-        await calculateAndDistributeBonus();
+        // await calculateAndDistributeBonus();
 
         // Schedule the daily job
         const job = cron.schedule(cronTime, async () => {

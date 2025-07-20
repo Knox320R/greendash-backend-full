@@ -446,6 +446,28 @@ const financialStatistic = async (req, res) => {
   }
 };
 
+const forceStaking = async (req, res) => {
+  try {
+    const { user_id, package_id } = req.body;
+    await Staking.create({ user_id, package_id, status: "admin_staking" })
+    const package = await StakingPackage.findByPk(package_id)
+    await Transaction.create({
+      user_id,
+      type: "admin_staking",
+      amount: package.stake_amount,
+      created_at: new Date()
+    })
+    return res.send({ success: true, message: "successfully staked!" })
+  } catch(e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "failed to force stake to user"
+    })
+  }
+}
+
+
 module.exports = {
   getDashboardStats,
   updateUser,
@@ -455,5 +477,6 @@ module.exports = {
   RejectWithdrawal,
   deleteAdminSettings,
   createAdminSettings,
-  financialStatistic
+  financialStatistic,
+  forceStaking
 };

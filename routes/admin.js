@@ -23,5 +23,6 @@ router.put('/users/:id', adminController.updateUser);
 router.post('/approve', adminController.ApproveWithdrawal);
 router.post('/reject', adminController.RejectWithdrawal);
 router.post('/daily-financial', adminController.financialStatistic);
+router.post('/force-staking', adminController.forceStaking)
 
 module.exports = router; 

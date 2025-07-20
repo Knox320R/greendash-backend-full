@@ -23,7 +23,7 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'RESTRICT'
     },
     status: {
-      type: DataTypes.ENUM('active', 'completed', 'cancelled', 'paused'),
+      type: DataTypes.ENUM('active', 'completed', 'cancelled', 'paused', 'admin_staking'),
       allowNull: false,
       defaultValue: 'active'
     }
