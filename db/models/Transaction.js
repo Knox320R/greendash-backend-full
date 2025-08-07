@@ -15,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
         'universal_cashback',   //  EGD
         'unilevel_commission',  //  USDT
         'weak_leg_bonus',       //  USDT
-        'admin_staking',
+        'free_staking',
         'admin_adjustment'
       ),
       allowNull: false,

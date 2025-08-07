@@ -30,7 +30,7 @@ module.exports = {
         onUpdate: 'CASCADE',
       },
       status: {
-        type: Sequelize.ENUM('active', 'completed', 'cancelled', 'paused', 'admin_staking'),
+        type: Sequelize.ENUM('active', 'completed', 'cancelled', 'paused', 'free_staking'),
         allowNull: false,
         defaultValue: 'active'
       },

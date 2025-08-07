@@ -40,7 +40,7 @@ async function calculateAndDistributeBonus() {
             include: [{
                 model: Staking,
                 as: 'stakings',
-                where: { status: { [Op.in]: ['active', 'admin_staking']} },
+                where: { status: { [Op.in]: ['active', 'free_staking']} },
                 required: true,
                 include: [{ model: StakingPackage, as: 'package' }]
             }]
@@ -60,14 +60,6 @@ async function calculateAndDistributeBonus() {
             return { user, userTotalStaked, userDailyYield };
         });
 
-        // Write stakers info to report.json for transparency/debugging
-        // try {
-        //     fs.writeFileSync('report.json', JSON.stringify(userStakingInfo, null, 2), 'utf8');
-        //     console.log('✅ Stakers info written to report.json');
-        // } catch (err) {
-        //     console.error('❌ Failed to write report.json:', err);
-        // }
-
         // 4. Credit daily yield from staking packages to each user
         let total_daily_rewards = 0;
         for (const info of userStakingInfo) {
@@ -80,6 +72,7 @@ async function calculateAndDistributeBonus() {
                     amount: info.userDailyYield,
                     created_at: new Date()
                 });
+                await monitorUserProfit(info.user.id);
             }
         }
 

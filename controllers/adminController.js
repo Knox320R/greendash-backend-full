@@ -14,18 +14,28 @@ const getDashboardStats = async (req, res) => {
     // Staking statistics
     const totalStakings = await Staking.count();
     const activeStakings = await Staking.count({ where: { status: 'active' } });
+    const adminStakings = await Staking.count({ where: { status: 'free_staking' } });
     // Calculate total staked amount from packages
     const activeStakingsWithPackages = await Staking.findAll({
       where: { status: 'active' },
       include: [{ model: StakingPackage, as: 'package', attributes: ['stake_amount'] }]
     });
     const totalStakedAmount = activeStakingsWithPackages.reduce((sum, staking) => { return sum + parseFloat(staking.package?.stake_amount || 0); }, 0);
-    // Calculate total rewards paid from transactions
-    const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'daily_reward' } });
 
+    // Calculate total rewards paid from transactions
+    // const totalRewardsPaid = await Transaction.sum('amount', { where: { type: 'daily_reward' } });
+
+    const seedToken = await TotalToken.findOne({ where: { title: "seed_sale" } })
+    const seedSalePrice = seedToken.price
     // Financial statistics - calculate from transactions
-    const totalInvested = await Transaction.sum('amount', { where: { type: 'staking' } });
-    const totalEarned = await Transaction.sum('amount', { where: { type: { [Op.in]: ['daily_reward', 'unilevel_commission', 'weak_leg_bonus'] } } });
+    const totalInvestedEGD = await Transaction.sum('amount', { where: { type: 'staking' } });
+    const totalInvested = parseFloat(totalInvestedEGD) * seedSalePrice;
+
+    const totalDailyRewardedEGD = await Transaction.sum('amount', { where: { type: 'daily_reward' } });
+    const totalDailyRewardedUSDT = parseFloat(totalDailyRewardedEGD) * seedSalePrice;
+    const totalBonusUSDT = await Transaction.sum('amount', { where: { type: { [Op.in]: ['unilevel_commission', 'weak_leg_bonus'] } } });
+    const totalEarned = totalDailyRewardedUSDT + parseFloat(totalBonusUSDT);
+
     const totalWithdrawn = await Transaction.sum('amount', { where: { type: 'withdrawal' } });
 
     // Transaction statistics
@@ -50,11 +60,11 @@ const getDashboardStats = async (req, res) => {
           total: totalStakings,
           active: activeStakings,
           total_staked: parseFloat(totalStakedAmount || 0),
-          total_rewards_paid: parseFloat(totalRewardsPaid || 0)
+          total_rewards_paid: adminStakings
         },
         financial: {
-          total_invested: parseFloat(totalInvested || 0),
-          total_earned: parseFloat(totalEarned || 0),
+          total_invested: totalInvested,
+          total_earned: totalEarned,
           total_withdrawn: parseFloat(totalWithdrawn || 0)
         },
         transactions: {
@@ -227,7 +237,23 @@ const getTablePagenation = async (req, res) => {
 
     switch (table_name) {
       case "users": {
-        list = await User.findAll({ order: [['created_at', 'DESC']], limit, offset, attributes: ['id', 'email', 'name', 'created_at', 'is_email_verified', 'is_active'] });
+        list = await User.findAll({
+          include: [{
+            model: Staking,
+            as: 'stakings',
+            // where: { status: { [Op.in]: ['active', 'free_staking'] } },
+            attributes: ['id', 'package_id', 'status', 'created_at'],
+            // required: true,
+            include: [{
+              model: StakingPackage,
+              as: 'package'
+            }]
+          }],
+          order: [['created_at', 'DESC']],
+          limit,
+          offset,
+          attributes: ['id', 'email', 'name', 'created_at', 'is_email_verified', 'is_active', 'left_volume', 'right_volume']
+        });
         break
       }
       case "stakings": {
@@ -449,16 +475,16 @@ const financialStatistic = async (req, res) => {
 const forceStaking = async (req, res) => {
   try {
     const { user_id, package_id } = req.body;
-    await Staking.create({ user_id, package_id, status: "admin_staking" })
-    const package = await StakingPackage.findByPk(package_id)
-    await Transaction.create({
-      user_id,
-      type: "admin_staking",
-      amount: package.stake_amount,
-      created_at: new Date()
-    })
+    await Staking.create({ user_id, package_id, status: "free_staking" })
+    // const package = await StakingPackage.findByPk(package_id)
+    // await Transaction.create({
+    //   user_id,
+    //   type: "free_staking",
+    //   amount: package.stake_amount,
+    //   created_at: new Date()
+    // })
     return res.send({ success: true, message: "successfully staked!" })
-  } catch(e) {
+  } catch (e) {
     console.log(e);
     res.status(500).json({
       success: false,
@@ -467,6 +493,20 @@ const forceStaking = async (req, res) => {
   }
 }
 
+const cancelStaking = async (req, res) => {
+  try {
+    const { staking_id } = req.body
+    const staking = await Staking.findByPk(staking_id)
+    await staking.destroy()
+    res.send({ success: true, message: "successfully canceled" })
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({
+      success: false,
+      message: "failed to cancel a staking package"
+    })
+  }
+}
 
 module.exports = {
   getDashboardStats,
@@ -478,5 +518,6 @@ module.exports = {
   deleteAdminSettings,
   createAdminSettings,
   financialStatistic,
-  forceStaking
+  forceStaking,
+  cancelStaking
 };

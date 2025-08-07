@@ -24,5 +24,6 @@ router.post('/approve', adminController.ApproveWithdrawal);
 router.post('/reject', adminController.RejectWithdrawal);
 router.post('/daily-financial', adminController.financialStatistic);
 router.post('/force-staking', adminController.forceStaking)
+router.post('/cancel-staking', adminController.cancelStaking)
 
 module.exports = router; 

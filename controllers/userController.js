@@ -1,6 +1,7 @@
 const { where } = require('sequelize');
 const { TokenPool, TotalToken, Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
+const { monitorUserProfit } = require('../utils/common');
 require('dotenv').config();
 
 // Get user profile
@@ -177,6 +178,7 @@ const startStaking = async (req, res) => {
         amount: withdrawal_increment,
         created_at: new Date()
       })
+      await monitorUserProfit(referrer.id);
       if (ref === 1) break
       ref = referrer.referred_by
     }

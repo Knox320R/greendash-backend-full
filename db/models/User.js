@@ -133,6 +133,11 @@ module.exports = (sequelize, DataTypes) => {
     password_reset_expires: {
       type: DataTypes.DATE,
       allowNull: true
+    },
+    benefit_overflow: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false
     }
   }, {
     sequelize,
