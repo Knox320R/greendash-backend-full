@@ -170,6 +170,7 @@ const startStaking = async (req, res) => {
     for (let unilevel of unilevel_list) {
       const referrer = await User.findByPk(ref)
       if (!referrer) break; // Add safety check
+      if(referrer.benefit_overflow) continue;
       const withdrawal_increment = usdt_amount * unilevel.commission_percent / 100
       await referrer.increment('withdrawals', { by: withdrawal_increment })
       await Transaction.create({
@@ -184,6 +185,8 @@ const startStaking = async (req, res) => {
     }
 
     const newStaking = { ...new_staking.dataValues, package }
+
+    await monitorUserProfit(user_id);
 
     return res.send({ success: true, message: "success to stake", newTransaction, newStaking })
 

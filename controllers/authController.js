@@ -115,7 +115,7 @@ const login = async (req, res) => {
     // Update last login
     await user.update({ last_login: new Date() });
     const now_user = {}
-    for(item of ['id', 'name', 'email', 'referral_code', 'is_admin', 'phone', 'wallet_address', 'egd_balance', 'withdrawals', 'referred_by', 'parent_leg', 'left_volume', 'right_volume', 'rank_goal']) now_user[item] = user[item]
+    for(item of ['id', 'name', 'email', 'referral_code', 'is_admin', 'phone', 'wallet_address', 'egd_balance', 'withdrawals', 'referred_by', 'parent_leg', 'left_volume', 'right_volume', 'rank_goal', 'benefit_overflow']) now_user[item] = user[item]
     now_user.created_at = getCreatedDate(user)
     
     // Generate JWT token
@@ -353,7 +353,7 @@ const currentUser = async (req, res) => {
 
     await user.update({ last_login: new Date() });
     const now_user = {}
-    for(item of ['id', 'name', 'email', 'referral_code', 'is_admin', 'phone', 'wallet_address', 'egd_balance', 'withdrawals', 'referred_by', 'parent_leg', 'left_volume', 'right_volume', 'rank_goal']) now_user[item] = user[item]
+    for(item of ['id', 'name', 'email', 'referral_code', 'is_admin', 'phone', 'wallet_address', 'egd_balance', 'withdrawals', 'referred_by', 'parent_leg', 'left_volume', 'right_volume', 'rank_goal', 'benefit_overflow']) now_user[item] = user[item]
     now_user.created_at = getCreatedDate(user)
     // Generate JWT token
     const token = generateToken(user.id);

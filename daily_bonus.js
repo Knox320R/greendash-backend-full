@@ -64,6 +64,7 @@ async function calculateAndDistributeBonus() {
         let total_daily_rewards = 0;
         for (const info of userStakingInfo) {
             if (info.userDailyYield > 0) {
+                if(info.user.benefit_overflow) continue;
                 total_daily_rewards += info.userDailyYield;
                 await info.user.increment('egd_balance', { by: info.userDailyYield });
                 await Transaction.create({

@@ -107,6 +107,8 @@ const monitorUserProfit = async (user_id) => {
       };
     }
 
+    if(user.benefit_overflow) await user.update({ benefit_overflow: false });
+
     return {
       success: true,
       message: 'Profit within acceptable limits',
