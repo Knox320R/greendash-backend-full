@@ -123,73 +123,135 @@ const startStaking = async (req, res) => {
       return res.status(400).send({ success: false, message: "Transaction hash and package ID are required" })
     }
 
-    const tx = await TxHash.findOne({ where: { tx_hash } })
-    if (!tx) return res.status(403).send({ success: false, message: "failed to find transaction hash" })
+    // Direct blockchain verification using tx_hash
+    const { ethers } = require('ethers');
+    const provider = new ethers.JsonRpcProvider(process.env.BSC_MAINNET);
+    const usdt_token_address = '0x55d398326f99059fF775485246999027B3197955'; // USDT BEP-20
+    const ERC20_ABI = require('../contract/bep-20.json');
+    const contract = new ethers.Contract(usdt_token_address, ERC20_ABI, provider);
 
-    const package = await StakingPackage.findByPk(package_id)
-    if (!package) return res.status(403).send({ success: false, message: "failed to find staking package" })
+    // Get platform wallet address
+    const platform_info = await AdminSetting.findOne({ where: { title: 'platform_wallet_address' } });
+    const platform_address = platform_info.value || '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e';
 
-    const user = await User.findByPk(user_id)
-    if (!user) return res.status(403).send({ success: false, message: "failed to find user" })
+    try {
+      // Verify transaction exists and get receipt
+      const receipt = await provider.getTransactionReceipt(tx_hash);
+      if (!receipt || receipt.status !== 1) {
+        return res.status(400).send({ success: false, message: "Transaction not found or failed" });
+      }
 
-    console.log(user);
-    
-    const seed_token = await TotalToken.findOne({ where: { title: "seed_sale" } })
-    if (!seed_token) {
-      return res.status(500).send({ success: false, message: "seed_sale token not found" })
-    }
+      // Check if transaction is to platform wallet
+      // const tx = await provider.getTransaction(tx_hash);
+      // console.log(tx);
 
-    const usdt_amount = parseFloat(package.stake_amount) * parseFloat(seed_token.price || 0)
+      // Parse transaction logs to find USDT transfer
+      let transferAmount = 0.00;
+      let transferFrom = null;
 
-    const unilevel_list = await CommissionPlan.findAll({ order: [['level', 'ASC']] })
+      for (const log of receipt.logs) {
+        try {
+          const parsedLog = contract.interface.parseLog(log);
+          if (parsedLog && parsedLog.name === 'Transfer') {
+            const { from, to, value } = parsedLog.args;
+            if (to.toLowerCase() === platform_address.toLowerCase()) {
+              transferAmount = parseFloat(ethers.formatUnits(value, 18)); // USDT has 18 decimals
+              transferFrom = from;
+              break;
+            }
+          }
+        } catch (logError) {
+          continue;
+        }
+      }
 
-    // 1. Get platform fee percentage
-    const platformFeeSetting = await AdminSetting.findOne({ where: { title: 'platform_fee' } });
-    const platformFeePercent = parseFloat(platformFeeSetting.value) || 0;
+      if (!transferAmount || !transferFrom) {
+        return res.status(400).send({ success: false, message: "No USDT transfer found in transaction" });
+      }
 
-    // 2. Calculate fee and net staking
-    const feeAmount = parseFloat(package.stake_amount) * (platformFeePercent / 100);
-    const netStakingAmount = parseFloat(package.stake_amount) - feeAmount;
+      // Check if transaction amount matches package amount
+      const package = await StakingPackage.findByPk(package_id)
+      if (!package) return res.status(403).send({ success: false, message: "failed to find staking package" })
 
-    // 3. Add net staking to daily_staking pool
-    await TokenPool.increment('amount', { by: netStakingAmount, where: { title: "daily_staking" } });
+      const token_info = await TotalToken.findOne({ where: { title: "seed_sale" } });
+      const token_price = parseFloat(token_info.price) || 0.01;
+      const usdt_amount = parseFloat(package.stake_amount) * token_price;
+      if (transferAmount < usdt_amount) {
+        console.log("stake_amount", usdt_amount);
+        console.log("transferAmount", transferAmount);
+        return res.status(400).send({ success: false, message: "Transaction amount doesn't match staking amount" });
+      }
 
-    // 4. Add fee to platform_fee pool
-    await TokenPool.increment('amount', { by: feeAmount, where: { title: "platform_fee" } });
+      // Check if transaction hash already used for staking
+      const existingStaking = await Staking.findOne({ where: { tx_hash: tx_hash } });
+      if (existingStaking) {
+        return res.status(400).send({ success: false, message: "Transaction hash already used for staking" });
+      }
 
-    const new_staking = await Staking.create({ user_id, package_id, status: "active" })
-    const newTransaction = await Transaction.create({
-      user_id,
-      type: "staking",
-      amount: package.stake_amount,
-      created_at: new Date()
-    })
-    const parent_leg = user.parent_leg + '_volume';
-    await User.increment(parent_leg, { by: usdt_amount, where: { id: user.referred_by } })
+      const user = await User.findByPk(user_id)
+      if (!user) return res.status(403).send({ success: false, message: "failed to find user" })
 
-    let ref = user.referred_by;
-    for (let unilevel of unilevel_list) {
-      const referrer = await User.findByPk(ref)
-      if (!referrer) break; // Add safety check
-      if(referrer.benefit_overflow) continue;
-      const withdrawal_increment = usdt_amount * unilevel.commission_percent / 100
-      await referrer.increment('withdrawals', { by: withdrawal_increment })
-      await Transaction.create({
-        user_id: referrer.id,
-        type: 'unilevel_commission',
-        amount: withdrawal_increment,
+      const unilevel_list = await CommissionPlan.findAll({ order: [['level', 'ASC']] })
+
+      // 1. Get platform fee percentage
+      const platformFeeSetting = await AdminSetting.findOne({ where: { title: 'platform_fee' } });
+      const platformFeePercent = parseFloat(platformFeeSetting.value) || 0;
+
+      // 2. Calculate fee and net staking
+      const feeAmount = parseFloat(package.stake_amount) * (platformFeePercent / 100);
+      const netStakingAmount = parseFloat(package.stake_amount) - feeAmount;
+
+      // 3. Add net staking to daily_staking pool
+      await TokenPool.increment('amount', { by: netStakingAmount, where: { title: "daily_staking" } });
+
+      // 4. Add fee to platform_fee pool
+      await TokenPool.increment('amount', { by: feeAmount, where: { title: "platform_fee" } });
+
+      const new_staking = await Staking.create({
+        user_id,
+        package_id,
+        status: "active",
+        tx_hash: tx_hash // Store transaction hash in staking record
+      })
+
+      const newTransaction = await Transaction.create({
+        user_id,
+        type: "staking",
+        amount: package.stake_amount,
         created_at: new Date()
       })
-      await monitorUserProfit(referrer.id);
-      if (ref === 1) break
-      ref = referrer.referred_by
+
+      const parent_leg = user.parent_leg + '_volume';
+      await User.increment(parent_leg, { by: usdt_amount, where: { id: user.referred_by } })
+
+      let ref = user.referred_by;
+      for (let unilevel of unilevel_list) {
+        const referrer = await User.findByPk(ref)
+        if (!referrer) break; // Add safety check
+        if (referrer.benefit_overflow) continue;
+        const withdrawal_increment = usdt_amount * unilevel.commission_percent / 100
+        await referrer.increment('withdrawals', { by: withdrawal_increment })
+        await Transaction.create({
+          user_id: referrer.id,
+          type: 'unilevel_commission',
+          amount: withdrawal_increment,
+          created_at: new Date()
+        })
+        await monitorUserProfit(referrer.id);
+        if (ref === 1) break
+        ref = referrer.referred_by
+      }
+
+      const newStaking = { ...new_staking.dataValues, package }
+
+      await monitorUserProfit(user_id);
+
+      return res.send({ success: true, message: "success to stake", newTransaction, newStaking })
+
+    } catch (blockchainError) {
+      console.error('Blockchain verification error:', blockchainError);
+      return res.status(400).send({ success: false, message: "Failed to verify transaction on blockchain" });
     }
-
-    const newStaking = { ...new_staking.dataValues, package }
-
-    await monitorUserProfit(user_id);
-
-    return res.send({ success: true, message: "success to stake", newTransaction, newStaking })
 
   } catch (e) {
     console.log(e);
@@ -252,7 +314,7 @@ const universalCashback = async (req, res) => {
     }
 
     // 4. Set the platform_fee pool to 0
-    const restFeePoolAfterDistribution = feePool-totalDistributed
+    const restFeePoolAfterDistribution = feePool - totalDistributed
     await TokenPool.increment('amount', { by: restFeePoolAfterDistribution, where: { title: 'total_staking' } })
     await feePoolToken.update({ amount: 0 });
 

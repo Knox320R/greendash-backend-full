@@ -29,13 +29,13 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-const allowedOrigins = ['https://greendash.io', 'https://www.greendash.io', 'http://localhost:3000'];
+const allowedOrigins = ['https://greendash.io', 'https://www.greendash.io', 'http://localhost:8080'];
 
 app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: false  // since you said no cookies/sessions, you can set this to false or omit
+  credentials: true  // since you said no cookies/sessions, you can set this to false or omit
 }));
 
 // Still keep this for OPTIONS preflight (optional if you want explicit handling)
@@ -53,10 +53,10 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-startListening((eventData) => {
-  console.log("✅ Event received in backend:", eventData);
-  // You could: save to DB, trigger business logic, notify frontend, etc.
-});
+// startListening((eventData) => {
+//   console.log("✅ Event received in backend:", eventData);
+//   // You could: save to DB, trigger business logic, notify frontend, etc.
+// });
 // Mount all routes
 app.use(routes);
 

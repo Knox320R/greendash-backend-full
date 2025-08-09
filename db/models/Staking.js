@@ -26,6 +26,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('active', 'completed', 'cancelled', 'paused', 'free_staking'),
       allowNull: false,
       defaultValue: 'active'
+    },
+    tx_hash: {
+      type: DataTypes.STRING(66),
+      allowNull: true,
+      unique: true
     }
   }, {
     sequelize,
@@ -37,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       { fields: ['user_id'] },
       { fields: ['package_id'] },
       { fields: ['status'] },
+      { fields: ['tx_hash'] }
     ]
   });
 
