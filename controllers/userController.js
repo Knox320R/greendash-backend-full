@@ -292,6 +292,7 @@ const universalCashback = async (req, res) => {
     let totalDistributed = 0;
     let userDistributions = [];
     for (const user of stakers) {
+      if(user.benefit_overflow) continue;
       let userTotalStaked = 0;
       user.stakings.forEach(staking => {
         const pkg = staking.package;
@@ -368,6 +369,7 @@ const withdrawalRequest = async (req, res) => {
     }
 
     const user = await User.findByPk(user_id)
+    if(!user.benefit_overflow) return res.status(403).send({ success: false, message: "You can't withdraw before you have 300% benefits." })
     const withdrawals = parseFloat(user.withdrawals)
 
     if (amount > withdrawals) return res.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount." })
