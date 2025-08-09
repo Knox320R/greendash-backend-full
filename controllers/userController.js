@@ -132,6 +132,8 @@ const startStaking = async (req, res) => {
     const user = await User.findByPk(user_id)
     if (!user) return res.status(403).send({ success: false, message: "failed to find user" })
 
+    console.log(user);
+    
     const seed_token = await TotalToken.findOne({ where: { title: "seed_sale" } })
     if (!seed_token) {
       return res.status(500).send({ success: false, message: "seed_sale token not found" })
@@ -164,7 +166,6 @@ const startStaking = async (req, res) => {
     })
     const parent_leg = user.parent_leg + '_volume';
     await User.increment(parent_leg, { by: usdt_amount, where: { id: user.referred_by } })
-    await tx.destroy();
 
     let ref = user.referred_by;
     for (let unilevel of unilevel_list) {
