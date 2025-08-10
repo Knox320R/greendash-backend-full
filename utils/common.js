@@ -1,4 +1,4 @@
-const { User, Staking, StakingPackage, TotalToken } = require('../db/models');
+const { User, Staking, StakingPackage, TotalToken, Transaction } = require('../db/models');
 
 const getCreatedDate = (obj) => {
   try {
@@ -47,6 +47,11 @@ const monitorUserProfit = async (user_id) => {
     }
 
     const seedTokenPrice = parseFloat(seedToken.price);
+    
+    // Validate seed token price
+    if (seedTokenPrice <= 0 || isNaN(seedTokenPrice)) {
+      return { success: false, message: 'Invalid seed sale token price' };
+    }
 
     // 3. Calculate user's total active staking amount
     let totalActiveStaking = 0;
@@ -63,21 +68,76 @@ const monitorUserProfit = async (user_id) => {
       return { success: true, message: 'No active staking to monitor' };
     }
 
-    // 4. Calculate user's current profit
+    // 4. Calculate user's current profit including withdrawal history
     const userEgdBalance = parseFloat(user.egd_balance) || 0;     // in EGD
-    const userWithdrawals = parseFloat(user.withdrawals) || 0;   // in USDT
     
-    // Convert to USDT equivalent using seed token price
-    const totalEGDbalance = userEgdBalance + userWithdrawals / seedTokenPrice;
+    // Get all withdrawal transactions (in USDT)
+    // Note: Transaction records are only created when withdrawals are approved by admin
+    // So all withdrawal transactions in the Transaction table are approved withdrawals
+    const withdrawalTransactions = await Transaction.findAll({
+      where: {
+        user_id: user_id,
+        type: 'withdrawal'
+      }
+    });
+    
+    // Calculate total withdrawals in USDT from transaction history
+    let totalWithdrawalsUSDT = 0;
+    if (withdrawalTransactions && withdrawalTransactions.length > 0) {
+      withdrawalTransactions.forEach(tx => {
+        const amount = parseFloat(tx.amount) || 0;
+        if (amount > 0) {
+          totalWithdrawalsUSDT += amount;
+        }
+      });
+    }
+    
+    // Fallback: Also check user's withdrawals field for comparison
+    let userWithdrawalsField = parseFloat(user.withdrawals) || 0;
+    
+    // Validate withdrawal amounts
+    if (totalWithdrawalsUSDT < 0) {
+      console.warn(`⚠️ Warning: Negative withdrawal amount detected for user ${user_id}: ${totalWithdrawalsUSDT}`);
+      totalWithdrawalsUSDT = 0;
+    }
+    
+    if (userWithdrawalsField < 0) {
+      console.warn(`⚠️ Warning: Negative user withdrawals field for user ${user_id}: ${userWithdrawalsField}`);
+      userWithdrawalsField = 0;
+    }
+    
+    // Use transaction history as primary source, but log both for comparison
+    console.log(`   - Withdrawals from transactions: ${totalWithdrawalsUSDT} USDT`);
+    console.log(`   - Withdrawals from user field: ${userWithdrawalsField} USDT`);
+    
+    // Convert USDT withdrawals to EGD equivalent using seed token price
+    const withdrawalsInEGD = totalWithdrawalsUSDT / seedTokenPrice;
+    
+    // Total EGD balance = Current EGD balance + Withdrawals converted to EGD
+    const totalEGDbalance = userEgdBalance + withdrawalsInEGD;
     
     // Calculate profit percentage
-    const profitPercentage = (totalEGDbalance / totalActiveStaking) * 100;
+    let profitPercentage = 0;
+    if (totalActiveStaking > 0) {
+      profitPercentage = (totalEGDbalance / totalActiveStaking) * 100;
+    } else {
+      console.warn(`⚠️ Warning: Total active staking is 0 for user ${user_id}`);
+      return { success: true, message: 'No active staking to monitor' };
+    }
+    
+    // Validate profit percentage
+    if (isNaN(profitPercentage) || profitPercentage < 0) {
+      console.warn(`⚠️ Warning: Invalid profit percentage calculated for user ${user_id}: ${profitPercentage}`);
+      profitPercentage = 0;
+    }
 
     console.log(`📊 User ${user_id} Profit Analysis:`);
     console.log(`   - Total Active Staking: ${totalActiveStaking} EGD`);
     console.log(`   - EGD Balance: ${userEgdBalance} EGD`);
-    console.log(`   - Withdrawals: ${userWithdrawals} USDT`);
-    console.log(`   - Total Value in USDT: ${totalEGDbalance} EGD`);
+    console.log(`   - Withdrawals from transactions: ${totalWithdrawalsUSDT} USDT`);
+    console.log(`   - Withdrawals from user field: ${userWithdrawalsField} USDT`);
+    console.log(`   - Withdrawals in EGD equivalent: ${withdrawalsInEGD.toFixed(8)} EGD`);
+    console.log(`   - Total Value: ${totalEGDbalance.toFixed(8)} EGD`);
     console.log(`   - Profit Percentage: ${profitPercentage.toFixed(2)}%`);
 
     // 5. Check if profit exceeds 300%
