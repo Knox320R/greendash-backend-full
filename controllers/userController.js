@@ -229,6 +229,8 @@ const startStaking = async (req, res) => {
         const referrer = await User.findByPk(ref)
         if (!referrer) break; // Add safety check
         if (referrer.benefit_overflow) continue;
+        const has_active = await Staking.findOne({where: { status: { [Op.in]: ['active', 'free_staking']}, user_id: referrer }})
+        if(!has_active) continue
         const withdrawal_increment = usdt_amount * unilevel.commission_percent / 100
         await referrer.increment('withdrawals', { by: withdrawal_increment })
         await Transaction.create({

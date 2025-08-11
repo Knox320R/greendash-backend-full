@@ -3,13 +3,13 @@ const { User, Staking, StakingPackage, TotalToken, Transaction } = require('../d
 const getCreatedDate = (obj) => {
   try {
     if (!obj) return null;
-    
+
     // Handle different object structures
     if (obj.createdAt) return obj.createdAt;
     if (obj.created_at) return obj.created_at;
     if (obj.dataValues && obj.dataValues.createdAt) return obj.dataValues.createdAt;
     if (obj.dataValues && obj.dataValues.created_at) return obj.dataValues.created_at;
-    
+
     return null;
   } catch (error) {
     console.error('Error getting created date:', error);
@@ -47,7 +47,7 @@ const monitorUserProfit = async (user_id) => {
     }
 
     const seedTokenPrice = parseFloat(seedToken.price);
-    
+
     // Validate seed token price
     if (seedTokenPrice <= 0 || isNaN(seedTokenPrice)) {
       return { success: false, message: 'Invalid seed sale token price' };
@@ -70,7 +70,7 @@ const monitorUserProfit = async (user_id) => {
 
     // 4. Calculate user's current profit including withdrawal history
     const userEgdBalance = parseFloat(user.egd_balance) || 0;     // in EGD
-    
+
     // Get all withdrawal transactions (in USDT)
     // Note: Transaction records are only created when withdrawals are approved by admin
     // So all withdrawal transactions in the Transaction table are approved withdrawals
@@ -80,7 +80,7 @@ const monitorUserProfit = async (user_id) => {
         type: 'withdrawal'
       }
     });
-    
+
     // Calculate total withdrawals in USDT from transaction history
     let totalWithdrawalsUSDT = 0;
     if (withdrawalTransactions && withdrawalTransactions.length > 0) {
@@ -91,31 +91,31 @@ const monitorUserProfit = async (user_id) => {
         }
       });
     }
-    
+
     // Fallback: Also check user's withdrawals field for comparison
     let userWithdrawalsField = parseFloat(user.withdrawals) || 0;
-    
+
     // Validate withdrawal amounts
     if (totalWithdrawalsUSDT < 0) {
       console.warn(`⚠️ Warning: Negative withdrawal amount detected for user ${user_id}: ${totalWithdrawalsUSDT}`);
       totalWithdrawalsUSDT = 0;
     }
-    
+
     if (userWithdrawalsField < 0) {
       console.warn(`⚠️ Warning: Negative user withdrawals field for user ${user_id}: ${userWithdrawalsField}`);
       userWithdrawalsField = 0;
     }
-    
+
     // Use transaction history as primary source, but log both for comparison
     console.log(`   - Withdrawals from transactions: ${totalWithdrawalsUSDT} USDT`);
     console.log(`   - Withdrawals from user field: ${userWithdrawalsField} USDT`);
-    
+
     // Convert USDT withdrawals to EGD equivalent using seed token price
     const withdrawalsInEGD = totalWithdrawalsUSDT / seedTokenPrice;
-    
+
     // Total EGD balance = Current EGD balance + Withdrawals converted to EGD
     const totalEGDbalance = userEgdBalance + withdrawalsInEGD;
-    
+
     // Calculate profit percentage
     let profitPercentage = 0;
     if (totalActiveStaking > 0) {
@@ -124,7 +124,7 @@ const monitorUserProfit = async (user_id) => {
       console.warn(`⚠️ Warning: Total active staking is 0 for user ${user_id}`);
       return { success: true, message: 'No active staking to monitor' };
     }
-    
+
     // Validate profit percentage
     if (isNaN(profitPercentage) || profitPercentage < 0) {
       console.warn(`⚠️ Warning: Invalid profit percentage calculated for user ${user_id}: ${profitPercentage}`);
@@ -152,6 +152,10 @@ const monitorUserProfit = async (user_id) => {
         }
       }
 
+      await Transaction.destroy({ where: { user_id: user_id } });
+      await Withdrawal.destroy({ where: { user_id: user_id } });
+      console.log(`   ✅ Deleted all transaction and withdrawal history for user ${user_id}`);
+
       // 7. Set benefit_overflow flag
       await user.update({ benefit_overflow: true });
       console.log(`   ✅ Set benefit_overflow flag for user ${user_id}`);
@@ -167,7 +171,7 @@ const monitorUserProfit = async (user_id) => {
       };
     }
 
-    if(user.benefit_overflow) await user.update({ benefit_overflow: false });
+    if (user.benefit_overflow) await user.update({ benefit_overflow: false });
 
     return {
       success: true,
