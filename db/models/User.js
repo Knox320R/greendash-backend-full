@@ -94,12 +94,22 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true
     },
-    egd_balance: {
+    new_egd_balance: {
       type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       defaultValue: 0
     },
-    withdrawals: {
+    old_egd_balance: {
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
+    },
+    new_withdrawals: {
+      type: DataTypes.DECIMAL(20, 8).UNSIGNED,
+      allowNull: false,
+      defaultValue: 0
+    },
+    old_withdrawals: {
       type: DataTypes.DECIMAL(20, 8).UNSIGNED,
       allowNull: false,
       defaultValue: 0
@@ -150,11 +160,17 @@ module.exports = (sequelize, DataTypes) => {
   User.addHook('afterFind', (result) => {
     if (!result) return;
     const convert = (user) => {
-      if (user && user.egd_balance !== undefined && user.egd_balance !== null) {
-        user.egd_balance = Number(user.egd_balance);
+      if (user && user.new_egd_balance !== undefined && user.new_egd_balance !== null) {
+        user.new_egd_balance = Number(user.new_egd_balance);
       }
-      if (user && user.withdrawals !== undefined && user.withdrawals !== null) {
-        user.withdrawals = Number(user.withdrawals);
+      if (user && user.old_egd_balance !== undefined && user.old_egd_balance !== null) {
+        user.old_egd_balance = Number(user.old_egd_balance);
+      }
+      if (user && user.new_withdrawals !== undefined && user.new_withdrawals !== null) {
+        user.new_withdrawals = Number(user.new_withdrawals);
+      }
+      if (user && user.old_withdrawals !== undefined && user.old_withdrawals !== null) {
+        user.old_withdrawals = Number(user.old_withdrawals);
       }
       if (user && user.left_volume !== undefined && user.left_volume !== null) {
         user.left_volume = Number(user.left_volume);

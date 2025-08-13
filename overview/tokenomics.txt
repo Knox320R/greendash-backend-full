@@ -1,0 +1,71 @@
+GreenDash - Functional Scope (Final Version for Developer Implementation)
+1. User Roles
+Each user can act as an Investor, a Networker, or both.
+The system automatically identifies user roles based on their actions.
+2. Investors
+Investors purchase staking packages and receive a fixed amount of EGD, based on the exchange
+rate of $0.01 = 1 EGD.
+- EGD received is immediately locked (staked) for 365 days
+- Users earn daily rewards in EGD
+- They can swap EGD to USDT (manual) and request withdrawals
+Staking Packages:
+Package Name | Price (USDT) | EGD Received | Daily Yield (%)
+Daily Ride | $100 | 10,000 EGD | 0.10%
+Weekly Pass | $500 | 50,000 EGD | 0.20%
+Economy Car | $1,000 | 100,000 EGD | 0.30%
+Business Fleet | $5,000 | 500,000 EGD | 0.40%
+Personal EV | $10,000 | 1,000,000 EGD| 0.50%
+Luxury Fleet | $50,000 | 5,000,000 EGD| 0.60%
+Corporate Mobility Hub | $100,000 | 10,000,000 EGD| 0.70%
+Universal Cashback - for Stakers
+- 10% of all platform fees are redistributed daily to all users with EGD in staking.
+- Distribution is proportional to the amount of EGD staked.
+3. Networkers
+Networkers earn commissions by referring new investors and building a team.
+Unilevel Commission Plan - up to 9 levels
+Level | Commission (%)
+1 | 15%
+2 | 7.5%
+3 | 4%
+4 | 3%
+5 | 2.5%
+6 | 2%
+7 | 1%
+8 | 0.75%
+9 | 0.5%
+All commissions are paid in USDT (BEP-20)
+Universal Cashback also applies to Networkers with staked EGD.
+4. Rank System - Networkers
+Ranks are achieved based on the sales volume of the weakest leg in the binary structure.
+The reward is 5% of the volume, paid in USDT or an electric vehicle equivalent.
+Rank | Volume (Weaker Leg) | Bonus (5%) | Optional Electric Vehicle
+Bronze | $10,000 | $500 | -
+Silver | $50,000 | $2,500 | -
+Gold | $100,000 | $5,000 | -
+Platinum | $250,000 | $12,500 | -
+Diamond | $500,000 | $25,000 | Compact electric car
+Ruby | $750,000 | $37,500 | Urban electric car
+Emerald | $1,000,000 | $50,000 | Modern electric SUV
+Sapphire | $1,500,000 | $75,000 | Sporty electric sedan
+Titanium | $2,000,000 | $100,000 | Premium 7-seater electric SUV
+Rules:
+- Volume is calculated only from the weakest leg
+- Rewards are one-time per rank
+- Users may choose between USDT or the vehicle option
+5. Admin - Permissions & Features
+Admins can:
+- View all user data, staking, earnings, commissions, withdrawals, and networks
+- Approve or reject withdrawal requests
+- Block/unblock users and payments
+- Create new packages (Price in USDT, Daily yield %, EGD allocation)
+Technical Checklist (To Develop)
+1. Unified user registration (Investor + Networker in one profile)
+2. Package purchase system with automatic EGD staking for 365 days
+3. Daily reward logic in EGD
+4. Manual swap system from EGD to USDT
+5. Withdrawal request and approval module
+6. 9-level Unilevel commission system
+7. Universal cashback logic - 10% daily distribution to all stakers
+8. Binary tree tracking with weakest leg detection for rank qualification
+9. Automatic rank rewards
+10. Full-featured Admin panel
