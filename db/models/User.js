@@ -137,7 +137,7 @@ module.exports = (sequelize, DataTypes) => {
     benefit_overflow: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: false
+      defaultValue: true
     }
   }, {
     sequelize,
