@@ -141,10 +141,6 @@ const startStaking = async (req, res) => {
         return res.status(400).send({ success: false, message: "Transaction not found or failed" });
       }
 
-      // Check if transaction is to platform wallet
-      // const tx = await provider.getTransaction(tx_hash);
-      // console.log(tx);
-
       // Parse transaction logs to find USDT transfer
       let transferAmount = 0.00;
       let transferFrom = null;

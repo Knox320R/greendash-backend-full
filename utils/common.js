@@ -53,6 +53,7 @@ const calculateStakingProgress = async (user_id) => {
       current_earned: current_earned_usdt, // in USDT
       target_amount: target_amount_usdt, // in USDT
       current_staking_package_amount: current_staking_package_amount_usdt, // in USDT
+      current_staking_package_name: currentStaking.package.name,
       has_active_staking: true
     };
   } catch (error) {
@@ -62,6 +63,7 @@ const calculateStakingProgress = async (user_id) => {
       current_earned: 0,
       target_amount: 0,
       current_staking_package_amount: 0,
+      current_staking_package_name: '',
       has_active_staking: false
     };
   }
