@@ -152,10 +152,6 @@ const monitorUserProfit = async (user_id) => {
         }
       }
 
-      await Transaction.destroy({ where: { user_id: user_id } });
-      await Withdrawal.destroy({ where: { user_id: user_id } });
-      console.log(`   ✅ Deleted all transaction and withdrawal history for user ${user_id}`);
-
       // 7. Set benefit_overflow flag
       await user.update({ benefit_overflow: true });
       console.log(`   ✅ Set benefit_overflow flag for user ${user_id}`);
