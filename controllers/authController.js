@@ -326,14 +326,18 @@ async function getDashboard(user_id) {
     const referral_network = await getReferralNetwork(user_id, 1);
 
     // Get active stakings with package details
-    const recent_Stakings = await Staking.findAll({ where: { user_id }, include: [{ model: StakingPackage, as: 'package' }], order: [['created_at', 'DESC']], limit: 100 });
+    const recent_staking = await Staking.findOne({ 
+      where: { user_id }, 
+      include: [{ model: StakingPackage, as: 'package' }], 
+      order: [['created_at', 'DESC']]
+    });
     const recent_transactions = await Transaction.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 });
     const recent_withdrawals = await Withdrawal.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 })
 
     return {
       upline_users,
       referral_network,
-      recent_Stakings,
+      recent_staking,
       recent_transactions,
       recent_withdrawals,
     };
