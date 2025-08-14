@@ -203,6 +203,19 @@ const monitorUserProfit = async (user_id) => {
     if (profitPercentage >= 300) {
       console.log(`⚠️ User ${user_id} profit exceeds 300% (${profitPercentage.toFixed(2)}%). Completing staking packages...`);
 
+      // Transfer current balances to old balances when starting new staking
+      const currentNewEgd = Number(user.new_egd_balance || 0)
+      const currentNewWithdrawals = Number(user.new_withdrawals || 0)
+      
+      if (currentNewEgd > 0 || currentNewWithdrawals > 0) {
+        await user.update({
+          old_egd_balance: Number(user.old_egd_balance || 0) + currentNewEgd,
+          old_withdrawals: Number(user.old_withdrawals || 0) + currentNewWithdrawals,
+          new_egd_balance: 0,
+          new_withdrawals: 0
+        })
+      }
+
       // 6. Complete all user's active staking packages
       if (user.stakings && user.stakings.length > 0) {
         for (const staking of user.stakings) {

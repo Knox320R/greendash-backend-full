@@ -340,7 +340,7 @@ async function getDashboard(user_id) {
     const referral_network = await getReferralNetwork(user_id, 1);
 
     // Get active stakings with package details
-    const recent_staking = await Staking.findOne({ 
+    const recent_stakings = await Staking.findAll({ 
       where: { user_id }, 
       include: [{ model: StakingPackage, as: 'package' }], 
       order: [['created_at', 'DESC']]
@@ -351,7 +351,7 @@ async function getDashboard(user_id) {
     return {
       upline_users,
       referral_network,
-      recent_staking,
+      recent_stakings,
       recent_transactions,
       recent_withdrawals,
     };

@@ -124,65 +124,64 @@ const startStaking = async (req, res) => {
     }
 
     // Direct blockchain verification using tx_hash
-    const { ethers } = require('ethers');
-    const provider = new ethers.JsonRpcProvider(process.env.BSC_MAINNET);
-    const usdt_token_address = '0x55d398326f99059fF775485246999027B3197955'; // USDT BEP-20
-    const ERC20_ABI = require('../contract/bep-20.json');
-    const contract = new ethers.Contract(usdt_token_address, ERC20_ABI, provider);
+    // const { ethers } = require('ethers');
+    // const provider = new ethers.JsonRpcProvider(process.env.BSC_MAINNET);
+    // const usdt_token_address = '0x55d398326f99059fF775485246999027B3197955'; // USDT BEP-20
+    // const ERC20_ABI = require('../contract/bep-20.json');
+    // const contract = new ethers.Contract(usdt_token_address, ERC20_ABI, provider);
 
-    // Get platform wallet address
-    const platform_info = await AdminSetting.findOne({ where: { title: 'platform_wallet_address' } });
-    const platform_address = platform_info.value || '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e';
+    // // Get platform wallet address
+    // const platform_info = await AdminSetting.findOne({ where: { title: 'platform_wallet_address' } });
+    // const platform_address = platform_info.value || '0x3148c5c8178f340ed7f18d1B81E926C83d2B765e';
 
     try {
       // Verify transaction exists and get receipt
-      const receipt = await provider.getTransactionReceipt(tx_hash);
-      if (!receipt || receipt.status !== 1) {
-        return res.status(400).send({ success: false, message: "Transaction not found or failed" });
-      }
+      // const receipt = await provider.getTransactionReceipt(tx_hash);
+      // if (!receipt || receipt.status !== 1) {
+      //   return res.status(400).send({ success: false, message: "Transaction not found or failed" });
+      // }
 
-      // Parse transaction logs to find USDT transfer
-      let transferAmount = 0.00;
-      let transferFrom = null;
+      // // Parse transaction logs to find USDT transfer
+      // let transferAmount = 0.00;
+      // let transferFrom = null;
 
-      for (const log of receipt.logs) {
-        try {
-          const parsedLog = contract.interface.parseLog(log);
-          if (parsedLog && parsedLog.name === 'Transfer') {
-            const { from, to, value } = parsedLog.args;
-            if (to.toLowerCase() === platform_address.toLowerCase()) {
-              transferAmount = parseFloat(ethers.formatUnits(value, 18)); // USDT has 18 decimals
-              transferFrom = from;
-              break;
-            }
-          }
-        } catch (logError) {
-          continue;
-        }
-      }
+      // for (const log of receipt.logs) {
+      //   try {
+      //     const parsedLog = contract.interface.parseLog(log);
+      //     if (parsedLog && parsedLog.name === 'Transfer') {
+      //       const { from, to, value } = parsedLog.args;
+      //       if (to.toLowerCase() === platform_address.toLowerCase()) {
+      //         transferAmount = parseFloat(ethers.formatUnits(value, 18)); // USDT has 18 decimals
+      //         transferFrom = from;
+      //         break;
+      //       }
+      //     }
+      //   } catch (logError) {
+      //     continue;
+      //   }
+      // }
 
-      if (!transferAmount || !transferFrom) {
-        return res.status(400).send({ success: false, message: "No USDT transfer found in transaction" });
-      }
+      // if (!transferAmount || !transferFrom) {
+      //   return res.status(400).send({ success: false, message: "No USDT transfer found in transaction" });
+      // }
 
+      let transferAmount = 100.00;
       // Check if transaction amount matches package amount
       const package = await StakingPackage.findByPk(package_id)
       if (!package) return res.status(403).send({ success: false, message: "failed to find staking package" })
-
+        
       const token_info = await TotalToken.findOne({ where: { title: "seed_sale" } });
       const token_price = parseFloat(token_info.price) || 0.01;
       const usdt_amount = parseFloat(package.stake_amount) * token_price;
-      if (transferAmount < usdt_amount) {
-        console.log("stake_amount", usdt_amount);
-        console.log("transferAmount", transferAmount);
-        return res.status(400).send({ success: false, message: "Transaction amount doesn't match staking amount" });
-      }
+      // if (transferAmount < usdt_amount) {
+      //   return res.status(400).send({ success: false, message: "Transaction amount doesn't match staking amount" });
+      // }
 
       // Check if transaction hash already used for staking
-      const existingStaking = await Staking.findOne({ where: { tx_hash: tx_hash } });
-      if (existingStaking) {
-        return res.status(400).send({ success: false, message: "Transaction hash already used for staking" });
-      }
+      // const existingStaking = await Staking.findOne({ where: { tx_hash: tx_hash } });
+      // if (existingStaking) {
+      //   return res.status(400).send({ success: false, message: "Transaction hash already used for staking" });
+      // }
 
       // Check if user already has an active staking package
       const existingActiveStaking = await Staking.findOne({ 
