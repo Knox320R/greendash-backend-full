@@ -66,7 +66,7 @@ async function calculateAndDistributeBonus() {
             if (info.userDailyYield > 0) {
                 if(info.user.benefit_overflow) continue;
                 total_daily_rewards += info.userDailyYield;
-                await info.user.increment('egd_balance', { by: info.userDailyYield });
+                await info.user.increment('new_egd_balance', { by: info.userDailyYield });
                 await Transaction.create({
                     user_id: info.user.id,
                     type: 'daily_reward',

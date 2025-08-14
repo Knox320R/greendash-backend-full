@@ -6,6 +6,9 @@ const crypto = require('crypto');
 const { Op, where } = require('sequelize');
 const { getCreatedDate } = require('../utils/common');
 
+// Import calculateStakingProgress from common utils
+const { calculateStakingProgress } = require('../utils/common');
+
 // Register new user
 const register = async (req, res) => {
   try {
@@ -93,10 +96,16 @@ const login = async (req, res) => {
     } catch (err) {
       return res.status(400).json({ success: false, message: err.message });
     }
-
+    
+    console.log("dddddddddddddddddddddddddddkkkkkkkkkkkkkkkkkk");
     // Find user
     const user = await User.findOne({ where: { email }});
+    console.log(user);
+    
+
     if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
+    
+    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
     
     // Check email verified
     if (!user.is_email_verified) {
@@ -123,7 +132,18 @@ const login = async (req, res) => {
     
     // Get user dashboard data
     const user_base_data = await getDashboard(user.id);
-    return res.json({ success: true, message: 'Login successful', user: now_user, user_base_data, token });
+    
+    // Calculate staking progress percentage
+    const staking_progress = await calculateStakingProgress(user.id);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Login successful', 
+      user: now_user, 
+      user_base_data, 
+      staking_progress,
+      token 
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: 'Login failed' });
@@ -326,14 +346,18 @@ async function getDashboard(user_id) {
     const referral_network = await getReferralNetwork(user_id, 1);
 
     // Get active stakings with package details
-    const recent_Stakings = await Staking.findAll({ where: { user_id }, include: [{ model: StakingPackage, as: 'package' }], order: [['created_at', 'DESC']], limit: 100 });
+    const recent_stakings = await Staking.findAll({ 
+      where: { user_id }, 
+      include: [{ model: StakingPackage, as: 'package' }], 
+      order: [['created_at', 'DESC']]
+    });
     const recent_transactions = await Transaction.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 });
     const recent_withdrawals = await Withdrawal.findAll({ where: { user_id }, order: [['created_at', 'DESC']], limit: 100 })
 
     return {
       upline_users,
       referral_network,
-      recent_Stakings,
+      recent_stakings,
       recent_transactions,
       recent_withdrawals,
     };
@@ -359,7 +383,18 @@ const currentUser = async (req, res) => {
     const token = generateToken(user.id);
     // Get user dashboard data
     const user_base_data = await getDashboard(id);
-    return res.json({ success: true, message: 'Login successful', user: now_user, user_base_data, token });
+    
+    // Calculate staking progress percentage
+    const staking_progress = await calculateStakingProgress(id);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Login successful', 
+      user: now_user, 
+      user_base_data, 
+      staking_progress,
+      token 
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: 'Login failed' });

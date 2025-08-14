@@ -332,7 +332,7 @@ const updateUser = async (req, res) => {
     if (typeof is_active === 'boolean') updated_ata.is_active = is_active;
     if (typeof is_admin === 'boolean') updated_ata.is_admin = is_admin;
     if (typeof is_email_verified === 'boolean') updated_ata.is_email_verified = is_email_verified;
-    if (egd_balance !== undefined) updated_ata.egd_balance = egd_balance;
+    if (egd_balance !== undefined) updated_ata.new_egd_balance = egd_balance;
 
     await user.update(updated_ata);
 
@@ -401,7 +401,7 @@ const RejectWithdrawal = async (req, res) => {
     }
 
     await withdrawal.update({ status: "rejected" })
-    await User.increment('withdrawals', { by: withdrawal.amount, where: { id: withdrawal.user_id } })
+    await User.increment('new_withdrawals', { by: withdrawal.amount, where: { id: withdrawal.user_id } })
     return res.send({ success: true, message: " successfully refund to the user " })
   } catch (e) {
     console.log(e);
@@ -475,6 +475,77 @@ const financialStatistic = async (req, res) => {
 const forceStaking = async (req, res) => {
   try {
     const { user_id, package_id } = req.body;
+    
+    // Get the user to transfer balances
+    const user = await User.findByPk(user_id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // Get the staking package details
+    const stakingPackage = await StakingPackage.findByPk(package_id);
+    if (!stakingPackage) {
+      return res.status(404).json({
+        success: false,
+        message: "Staking package not found"
+      });
+    }
+    
+    // Check if user already has an active staking package
+    const existingActiveStaking = await Staking.findOne({ 
+      where: { 
+        user_id: user_id,
+        status: { [Op.in]: ['active', 'free_staking'] }
+      },
+      include: [{ model: StakingPackage, as: 'package' }]
+    });
+
+    if (existingActiveStaking) {
+      // Check if this is an upgrade (new package must be bigger)
+      const currentPackage = existingActiveStaking.package;
+      const newPackage = stakingPackage;
+      
+      if (parseFloat(newPackage.stake_amount) <= parseFloat(currentPackage.stake_amount)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Upgrade not allowed. New package must be bigger than current package.",
+          current_package: currentPackage.stake_amount,
+          new_package: newPackage.stake_amount
+        });
+      }
+
+      // This is a valid upgrade - complete the current staking package
+      await existingActiveStaking.update({ status: 'completed' });
+      console.log(`✅ Admin upgraded staking package for user ${user_id}: ${currentPackage.stake_amount} -> ${newPackage.stake_amount}`);
+    }
+    
+    // Transfer current balances to old balances when starting new staking
+    const currentNewEgd = Number(user.new_egd_balance || 0)
+    const currentNewWithdrawals = Number(user.new_withdrawals || 0)
+    
+    if (currentNewEgd > 0 || currentNewWithdrawals > 0) {
+      await user.update({
+        old_egd_balance: Number(user.old_egd_balance || 0) + currentNewEgd,
+        old_withdrawals: Number(user.old_withdrawals || 0) + currentNewWithdrawals,
+        new_egd_balance: 0,
+        new_withdrawals: 0
+      })
+    }
+    
+    // Mark all completed withdrawals as achieved when starting new staking
+    await Withdrawal.update(
+      { status: 'achieved' },
+      { 
+        where: { 
+          user_id: user_id,
+          status: 'completed'
+        }
+      }
+    )
+    
     await Staking.create({ user_id, package_id, status: "free_staking" })
     // const package = await StakingPackage.findByPk(package_id)
     // await Transaction.create({
