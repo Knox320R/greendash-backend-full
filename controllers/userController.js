@@ -1,4 +1,4 @@
-const { where } = require('sequelize');
+const { where, Op } = require('sequelize');
 const { TokenPool, TotalToken, Withdrawal, AdminSetting, TxHash, User, Staking, Transaction, StakingPackage, CommissionPlan } = require('../db/models');
 const { validationResult } = require('express-validator');
 const { monitorUserProfit } = require('../utils/common');
@@ -188,8 +188,60 @@ const startStaking = async (req, res) => {
         return res.status(400).send({ success: false, message: "Transaction hash already used for staking" });
       }
 
+      // Check if user already has an active staking package
+      const existingActiveStaking = await Staking.findOne({ 
+        where: { 
+          user_id: user_id,
+          status: { [Op.in]: ['active', 'free_staking'] }
+        },
+        include: [{ model: StakingPackage, as: 'package' }]
+      });
+
+      if (existingActiveStaking) {
+        // Check if this is an upgrade (new package must be bigger)
+        const currentPackage = existingActiveStaking.package;
+        const newPackage = package;
+        
+        if (parseFloat(newPackage.stake_amount) <= parseFloat(currentPackage.stake_amount)) {
+          return res.status(400).send({ 
+            success: false, 
+            message: "Upgrade not allowed. New package must be bigger than current package.",
+            current_package: currentPackage.stake_amount,
+            new_package: newPackage.stake_amount
+          });
+        }
+
+        // This is a valid upgrade - complete the current staking package
+        await existingActiveStaking.update({ status: 'completed' });
+        console.log(`✅ Upgraded staking package for user ${user_id}: ${currentPackage.stake_amount} -> ${newPackage.stake_amount}`);
+      }
+
       const user = await User.findByPk(user_id)
       if (!user) return res.status(403).send({ success: false, message: "failed to find user" })
+
+      // Transfer current balances to old balances when starting new staking
+      const currentNewEgd = Number(user.new_egd_balance || 0)
+      const currentNewWithdrawals = Number(user.new_withdrawals || 0)
+      
+      if (currentNewEgd > 0 || currentNewWithdrawals > 0) {
+        await user.update({
+          old_egd_balance: Number(user.old_egd_balance || 0) + currentNewEgd,
+          old_withdrawals: Number(user.old_withdrawals || 0) + currentNewWithdrawals,
+          new_egd_balance: 0,
+          new_withdrawals: 0
+        })
+      }
+
+      // Mark all completed withdrawals as achieved when starting new staking
+      await Withdrawal.update(
+        { status: 'achieved' },
+        { 
+          where: { 
+            user_id: user_id,
+            status: 'completed'
+          }
+        }
+      )
 
       const unilevel_list = await CommissionPlan.findAll({ order: [['level', 'ASC']] })
 
@@ -230,7 +282,8 @@ const startStaking = async (req, res) => {
         if (!referrer) break; // Add safety check
         if (referrer.benefit_overflow) continue;
         const withdrawal_increment = usdt_amount * unilevel.commission_percent / 100
-        await referrer.increment('withdrawals', { by: withdrawal_increment })
+        
+        await referrer.increment('new_withdrawals', { by: withdrawal_increment })
         await Transaction.create({
           user_id: referrer.id,
           type: 'unilevel_commission',
@@ -303,7 +356,7 @@ const universalCashback = async (req, res) => {
       if (userTotalStaked > 0) {
         const share = (userTotalStaked / TOTAL_SUPPLY) * feePool;
         totalDistributed += share;
-        await user.increment('egd_balance', { by: share });
+        await user.increment('new_egd_balance', { by: share });
         await Transaction.create({
           user_id: user.id,
           type: 'universal_cashback',
@@ -348,10 +401,51 @@ const convertToUSDT = async (req, res) => {
 
     const seed_token = await TotalToken.findOne({ where: { title: "seed_sale" } }) || { price: 0.01 }
 
-    const new_egd = egd_balance - amount
-    const new_withd = withdrawals + amount * seed_token.price
-    const newUser = await user.update({ egd_balance: new_egd, withdrawals: new_withd })
-    res.send({ success: true, message: "success to exchange your token, EGD -> USDT", egd: newUser.egd_balance, withd: newUser.withdrawals })
+    // Calculate new balances
+    const currentNewEgd = Number(user.new_egd_balance || 0)
+    const currentOldEgd = Number(user.old_egd_balance || 0)
+    const currentNewWithdrawals = Number(user.new_withdrawals || 0)
+    const currentOldWithdrawals = Number(user.old_withdrawals || 0)
+    
+    let remainingAmount = amount
+    let newNewEgd = currentNewEgd
+    let newOldEgd = currentOldEgd
+    let newNewWithdrawals = currentNewWithdrawals
+    let newOldWithdrawals = currentOldWithdrawals
+    
+    // First deduct from new_egd_balance
+    if (remainingAmount > 0 && newNewEgd > 0) {
+      const deductFromNew = Math.min(remainingAmount, newNewEgd)
+      newNewEgd -= deductFromNew
+      remainingAmount -= deductFromNew
+    }
+    
+    // Then deduct from old_egd_balance if needed
+    if (remainingAmount > 0 && newOldEgd > 0) {
+      const deductFromOld = Math.min(remainingAmount, newOldEgd)
+      newOldEgd -= deductFromOld
+      remainingAmount -= deductFromOld
+    }
+    
+    // Add to withdrawals (prefer new_withdrawals first)
+    const usdtAmount = (amount - remainingAmount) * seed_token.price
+    if (usdtAmount > 0) {
+      newNewWithdrawals += usdtAmount
+    }
+
+    const newUser = await user.update({ 
+      new_egd_balance: newNewEgd, 
+      old_egd_balance: newOldEgd,
+      new_withdrawals: newNewWithdrawals,
+      old_withdrawals: newOldWithdrawals
+    })
+    
+    res.send({ 
+      success: true, 
+      message: "success to exchange your token, EGD -> USDT", 
+      egd: newUser.egd_balance, 
+      withd: newUser.withdrawals 
+    })
 
   } catch (e) {
     console.log(e);
@@ -374,7 +468,34 @@ const withdrawalRequest = async (req, res) => {
 
     if (amount > withdrawals) return res.status(403).send({ success: false, message: "Your requested amount is exceeding the available amount." })
 
-    await user.increment('withdrawals', { by: -amount })
+    // Calculate new withdrawal balances
+    const currentNewWithdrawals = Number(user.new_withdrawals || 0)
+    const currentOldWithdrawals = Number(user.old_withdrawals || 0)
+    
+    let remainingAmount = amount
+    let newNewWithdrawals = currentNewWithdrawals
+    let newOldWithdrawals = currentOldWithdrawals
+    
+    // First deduct from new_withdrawals
+    if (remainingAmount > 0 && newNewWithdrawals > 0) {
+      const deductFromNew = Math.min(remainingAmount, newNewWithdrawals)
+      newNewWithdrawals -= deductFromNew
+      remainingAmount -= deductFromNew
+    }
+    
+    // Then deduct from old_withdrawals if needed
+    if (remainingAmount > 0 && newOldWithdrawals > 0) {
+      const deductFromOld = Math.min(remainingAmount, newOldWithdrawals)
+      newOldWithdrawals -= deductFromOld
+      remainingAmount -= deductFromOld
+    }
+    
+    // Update user withdrawal balances
+    await user.update({
+      new_withdrawals: newNewWithdrawals,
+      old_withdrawals: newOldWithdrawals
+    })
+    
     const withdrawal = await Withdrawal.create({
       user_id,
       amount,

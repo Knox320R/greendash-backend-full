@@ -154,7 +154,15 @@ module.exports = (sequelize, DataTypes) => {
     modelName: 'User',
     tableName: 'users',
     timestamps: true,
-    underscored: true
+    underscored: true,
+    getterMethods: {
+      egd_balance() {
+        return Number(this.old_egd_balance || 0) + Number(this.new_egd_balance || 0);
+      },
+      withdrawals() {
+        return Number(this.old_withdrawals || 0) + Number(this.new_withdrawals || 0);
+      }
+    }
   });
 
   User.addHook('afterFind', (result) => {

@@ -149,7 +149,7 @@ const STAKING_STATUSES = ['active', 'completed', 'cancelled', 'paused'];
 const PAYMENT_METHODS = ['usdt_bep20', 'egd_tokens'];
 
 // Validate withdrawal status
-const WITHDRAWAL_STATUSES = ['pending', 'approved', 'rejected', 'processing', 'completed'];
+const WITHDRAWAL_STATUSES = ['pending', 'approved', 'rejected', 'processing', 'completed', 'achieved'];
 
 // Validate transaction status
 const TRANSACTION_STATUSES = ['pending', 'completed', 'failed', 'cancelled', 'processing'];
