@@ -1,6 +1,72 @@
 const { User, Staking, StakingPackage, TotalToken, Transaction, Withdrawal } = require('../db/models');
 const { Op } = require('sequelize'); // Added Op import for the new_withdrawals query
 
+/**
+ * Calculate staking progress percentage based on new idea
+ * @param {number} user_id - The user's ID
+ * @returns {Promise<Object>} - Object containing staking progress information
+ */
+const calculateStakingProgress = async (user_id) => {
+  try {
+    // Get user's current staking package
+    const currentStaking = await Staking.findOne({ 
+      where: { 
+        user_id, 
+        status: { [Op.in]: ['active', 'free_staking'] } 
+      }, 
+      include: [{ model: StakingPackage, as: 'package' }] 
+    });
+
+    if (!currentStaking || !currentStaking.package) {
+      return {
+        progress_rate: 0,
+        current_earned: 0,
+        target_amount: 0,
+        current_staking_package_amount: 0,
+        has_active_staking: false
+      };
+    }
+
+    // Get token price
+    const tokenInfo = await TotalToken.findOne({ where: { title: "seed_sale" } });
+    const token_price = parseFloat(tokenInfo?.price) || 0.01;
+
+    // Get user's current balances
+    const user = await User.findByPk(user_id);
+    const current_egd_balance = Number(user.new_egd_balance || 0);
+    const current_withdrawals = Number(user.new_withdrawals || 0);
+
+    // Calculate current earned amount in USDT
+    // Convert EGD balance to USDT + current withdrawals (already in USDT)
+    const current_earned_usdt = (current_egd_balance * token_price) + current_withdrawals;
+
+    // Calculate target amount in USDT (current staking package amount * 3)
+    const current_staking_package_amount_egd = parseFloat(currentStaking.package.stake_amount);
+    const current_staking_package_amount_usdt = current_staking_package_amount_egd * token_price;
+    const target_amount_usdt = current_staking_package_amount_usdt * 3;
+
+    // Calculate progress percentage
+    const progress_rate = target_amount_usdt > 0 ? (current_earned_usdt / target_amount_usdt) * 100 : 0;
+
+    return {
+      progress_rate: Math.min(progress_rate, 100), // Cap at 100%
+      current_earned: current_earned_usdt, // in USDT
+      target_amount: target_amount_usdt, // in USDT
+      current_staking_package_amount: current_staking_package_amount_usdt, // in USDT
+      has_active_staking: true
+    };
+  } catch (error) {
+    console.error('Error calculating staking progress:', error);
+    return {
+      progress_rate: 0,
+      current_earned: 0,
+      target_amount: 0,
+      current_staking_package_amount: 0,
+      has_active_staking: false
+    };
+  }
+};
+
 const getCreatedDate = (obj) => {
   try {
     if (!obj) return null;
@@ -177,5 +243,6 @@ const monitorUserProfit = async (user_id) => {
 
 module.exports = {
   getCreatedDate,
-  monitorUserProfit
+  monitorUserProfit,
+  calculateStakingProgress
 };

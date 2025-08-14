@@ -6,6 +6,9 @@ const crypto = require('crypto');
 const { Op, where } = require('sequelize');
 const { getCreatedDate } = require('../utils/common');
 
+// Import calculateStakingProgress from common utils
+const { calculateStakingProgress } = require('../utils/common');
+
 // Register new user
 const register = async (req, res) => {
   try {
@@ -123,7 +126,18 @@ const login = async (req, res) => {
     
     // Get user dashboard data
     const user_base_data = await getDashboard(user.id);
-    return res.json({ success: true, message: 'Login successful', user: now_user, user_base_data, token });
+    
+    // Calculate staking progress percentage
+    const staking_progress = await calculateStakingProgress(user.id);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Login successful', 
+      user: now_user, 
+      user_base_data, 
+      staking_progress,
+      token 
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: 'Login failed' });
@@ -363,7 +377,18 @@ const currentUser = async (req, res) => {
     const token = generateToken(user.id);
     // Get user dashboard data
     const user_base_data = await getDashboard(id);
-    return res.json({ success: true, message: 'Login successful', user: now_user, user_base_data, token });
+    
+    // Calculate staking progress percentage
+    const staking_progress = await calculateStakingProgress(id);
+    
+    return res.json({ 
+      success: true, 
+      message: 'Login successful', 
+      user: now_user, 
+      user_base_data, 
+      staking_progress,
+      token 
+    });
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: 'Login failed' });
