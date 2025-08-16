@@ -50,8 +50,8 @@ const calculateStakingProgress = async (user_id) => {
 
     return {
       progress_rate: Math.min(progress_rate, 100), // Cap at 100%
-      current_earned: current_earned_usdt, // in USDT
-      target_amount: target_amount_usdt, // in USDT
+      current_earned: current_earned_usdt * 100, // in USDT
+      target_amount: current_staking_package_amount_egd * 3, //target_amount_usdt, // in USDT
       current_staking_package_amount: current_staking_package_amount_usdt, // in USDT
       current_staking_package_name: currentStaking.package.name,
       has_active_staking: true

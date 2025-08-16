@@ -475,7 +475,7 @@ const financialStatistic = async (req, res) => {
 const forceStaking = async (req, res) => {
   try {
     const { user_id, package_id } = req.body;
-    
+
     // Get the user to transfer balances
     const user = await User.findByPk(user_id);
     if (!user) {
@@ -493,39 +493,41 @@ const forceStaking = async (req, res) => {
         message: "Staking package not found"
       });
     }
-    
+
     // Check if user already has an active staking package
-    const existingActiveStaking = await Staking.findOne({ 
-      where: { 
+    const existingActiveStakingList = await Staking.findAll({
+      where: {
         user_id: user_id,
         status: { [Op.in]: ['active', 'free_staking'] }
       },
       include: [{ model: StakingPackage, as: 'package' }]
     });
 
-    if (existingActiveStaking) {
-      // Check if this is an upgrade (new package must be bigger)
-      const currentPackage = existingActiveStaking.package;
-      const newPackage = stakingPackage;
-      
-      if (parseFloat(newPackage.stake_amount) <= parseFloat(currentPackage.stake_amount)) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Upgrade not allowed. New package must be bigger than current package.",
-          current_package: currentPackage.stake_amount,
-          new_package: newPackage.stake_amount
-        });
-      }
+    for (let existingActiveStaking of existingActiveStakingList) {
+      if (existingActiveStaking) {
+        // Check if this is an upgrade (new package must be bigger)
+        const currentPackage = existingActiveStaking.package;
+        const newPackage = stakingPackage;
 
+        if (parseFloat(newPackage.stake_amount) <= parseFloat(currentPackage.stake_amount)) {
+          return res.status(400).json({
+            success: false,
+            message: "Upgrade not allowed. New package must be bigger than current package.",
+            current_package: currentPackage.stake_amount,
+            new_package: newPackage.stake_amount
+          });
+        }
+
+      }
+      
       // This is a valid upgrade - complete the current staking package
       await existingActiveStaking.update({ status: 'completed' });
-      console.log(`✅ Admin upgraded staking package for user ${user_id}: ${currentPackage.stake_amount} -> ${newPackage.stake_amount}`);
     }
-    
+
     // Transfer current balances to old balances when starting new staking
     const currentNewEgd = Number(user.new_egd_balance || 0)
     const currentNewWithdrawals = Number(user.new_withdrawals || 0)
-    
+
     if (currentNewEgd > 0 || currentNewWithdrawals > 0) {
       await user.update({
         old_egd_balance: Number(user.old_egd_balance || 0) + currentNewEgd,
@@ -534,26 +536,32 @@ const forceStaking = async (req, res) => {
         new_withdrawals: 0
       })
     }
-    
+
     // Mark all completed withdrawals as achieved when starting new staking
     await Withdrawal.update(
       { status: 'achieved' },
-      { 
-        where: { 
+      {
+        where: {
           user_id: user_id,
           status: 'completed'
         }
       }
     )
-    
+
+    // Create staking transaction record
+    await Transaction.create({
+      user_id,
+      type: "free_staking",
+      amount: stakingPackage.stake_amount,
+      created_at: new Date()
+    })
+
     await Staking.create({ user_id, package_id, status: "free_staking" })
-    // const package = await StakingPackage.findByPk(package_id)
-    // await Transaction.create({
-    //   user_id,
-    //   type: "free_staking",
-    //   amount: package.stake_amount,
-    //   created_at: new Date()
-    // })
+
+    // Monitor user profit after staking
+    const { monitorUserProfit } = require('../utils/common');
+    await monitorUserProfit(user_id);
+
     return res.send({ success: true, message: "successfully staked!" })
   } catch (e) {
     console.log(e);
@@ -568,7 +576,7 @@ const cancelStaking = async (req, res) => {
   try {
     const { staking_id } = req.body
     const staking = await Staking.findByPk(staking_id)
-    await staking.destroy()
+    if (staking) await staking.destroy()
     res.send({ success: true, message: "successfully canceled" })
   } catch (e) {
     console.log(e);

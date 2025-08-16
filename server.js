@@ -35,7 +35,7 @@ app.use(cors({
   origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  credentials: false  // since you said no cookies/sessions, you can set this to false or omit
+  credentials: true  // since you said no cookies/sessions, you can set this to false or omit
 }));
 
 // Still keep this for OPTIONS preflight (optional if you want explicit handling)
