@@ -97,15 +97,10 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, message: err.message });
     }
     
-    console.log("dddddddddddddddddddddddddddkkkkkkkkkkkkkkkkkk");
     // Find user
     const user = await User.findOne({ where: { email }});
-    console.log(user);
-    
 
     if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    
-    console.log("kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk");
     
     // Check email verified
     if (!user.is_email_verified) {

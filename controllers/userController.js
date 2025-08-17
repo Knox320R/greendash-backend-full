@@ -280,13 +280,13 @@ const startStaking = async (req, res) => {
         const has_active = await Staking.findOne({ where: { status: { [Op.in]: ['active', 'free_staking'] }, user_id: referrer.id } })
         
         if (!has_active) continue
-        const withdrawal_increment = usdt_amount * unilevel.commission_percent / 100
+        const egd_increment = usdt_amount * unilevel.commission_percent
 
-        await referrer.increment('new_withdrawals', { by: withdrawal_increment })
+        await referrer.increment('new_egd_balance', { by: egd_increment })
         await Transaction.create({
           user_id: referrer.id,
           type: 'unilevel_commission',
-          amount: withdrawal_increment,
+          amount: egd_increment,
           created_at: new Date()
         })
         await monitorUserProfit(referrer.id);
@@ -300,6 +300,9 @@ const startStaking = async (req, res) => {
       // Calculate staking progress percentage for the response
       const { calculateStakingProgress } = require('../utils/common');
       const staking_progress = await calculateStakingProgress(user_id);
+      
+      const totalRewardedEGD = await CommissionPlan.sum('amount', { where: { type: 'commission_percent' } });
+      await TotalToken.increment('amount', { by: -totalRewardedEGD, where: { title: 'staking_reserves' } });
 
       return res.send({
         success: true,

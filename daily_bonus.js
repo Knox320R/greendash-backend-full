@@ -3,6 +3,7 @@ const cron = require('node-cron');
 const { Op } = require('sequelize');
 const { User, Staking, StakingPackage, Transaction, AdminSetting, TotalToken, TokenPool } = require('./db/models');
 const fs = require('fs');
+const { monitorUserProfit } = require('./utils/common');
 
 /**
  * Main function to calculate and distribute the daily staking bonus (rewards)
